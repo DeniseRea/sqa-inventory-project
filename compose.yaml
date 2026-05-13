@@ -19,6 +19,7 @@ services:
 
   app:
     build: ./backend
+    image: ${REGISTRY_URL:-dongato}/sqa-backend:latest
     container_name: dongato-app
     ports:
       - '8080:8080'
@@ -35,6 +36,7 @@ services:
     build: 
       context: ./frontend
       dockerfile: Dockerfile
+    image: ${REGISTRY_URL:-dongato}/sqa-frontend:latest
     container_name: dongato-frontend
     ports:
       - '80:80'
