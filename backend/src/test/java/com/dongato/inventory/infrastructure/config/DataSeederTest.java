@@ -20,6 +20,9 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class DataSeederTest {
 
+    private static final int EXPECTED_CATEGORY_COUNT = 3;
+    private static final int EXPECTED_PRODUCT_COUNT = 11;
+
     private final DataSeeder dataSeeder = new DataSeeder();
 
     @Test
@@ -53,8 +56,8 @@ class DataSeederTest {
         CommandLineRunner runner = dataSeeder.seedData(categoryRepo, productRepo);
         runner.run();
 
-        verify(categoryRepo, times(3)).save(any(CategoryEntity.class));
-        verify(productRepo, times(11)).save(any(ProductEntity.class));
+        verify(categoryRepo, times(EXPECTED_CATEGORY_COUNT)).save(any(CategoryEntity.class));
+        verify(productRepo, times(EXPECTED_PRODUCT_COUNT)).save(any(ProductEntity.class));
 
         ArgumentCaptor<ProductEntity> productCaptor = ArgumentCaptor.forClass(ProductEntity.class);
         verify(productRepo, atLeastOnce()).save(productCaptor.capture());
