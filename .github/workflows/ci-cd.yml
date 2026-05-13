@@ -18,7 +18,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Requerido para un mejor análisis de SonarQube
+          fetch-depth: 0
 
       - name: Set up JDK 25
         uses: actions/setup-java@v4
@@ -31,8 +31,15 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        # Este comando compila, corre pruebas y envía a Sonar evitando problemas con Docker
-        run: mvn -B test org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=DeniseRea_sqa-inventory-project -Dsonar.organization=deniserea -Dsonar.host.url=https://sonarcloud.io -DskipDocker=true      - name: Upload Coverage Report
+        run: |
+          mvn -B test \
+            org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+            -Dsonar.projectKey=DeniseRea_sqa-inventory-project \
+            -Dsonar.organization=deniserea \
+            -Dsonar.host.url=https://sonarcloud.io \
+            -DskipDocker=true
+
+      - name: Upload Coverage Report
         uses: actions/upload-artifact@v4
         with:
           name: jacoco-report
