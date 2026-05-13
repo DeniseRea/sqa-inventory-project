@@ -42,8 +42,6 @@ class DataSeederTest {
         JpaCategoryRepository categoryRepo = mock(JpaCategoryRepository.class);
         JpaProductRepository productRepo = mock(JpaProductRepository.class);
         when(categoryRepo.count()).thenReturn(0L);
-        when(productRepo.count()).thenReturn(11L);
-
         AtomicLong idGenerator = new AtomicLong(1);
         when(categoryRepo.save(any(CategoryEntity.class))).thenAnswer(invocation -> {
             CategoryEntity entity = invocation.getArgument(0);
