@@ -3,12 +3,12 @@ import { FormField } from "../molecules/FormField";
 import { Button } from "../atoms/Button";
 
 export const LoginForm = ({ onSubmit }) => {
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit({ email, password });
+    onSubmit({ username, password });
   };
 
   return (
@@ -42,11 +42,11 @@ export const LoginForm = ({ onSubmit }) => {
         </p>
       </div>
       <FormField
-        label="Correo Electrónico"
-        type="email"
-        placeholder="tu@ejemplo.com"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
+        label="Usuario"
+        type="text"
+        placeholder="Ej. admin"
+        value={username}
+        onChange={(e) => setUsername(e.target.value)}
       />
       <FormField
         label="Contraseña"
