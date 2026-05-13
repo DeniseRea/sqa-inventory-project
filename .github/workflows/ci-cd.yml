@@ -34,7 +34,7 @@ jobs:
         run: |
           mvn -B test -DskipDocker=true
 
-          JACOCO_REPORT_PATH="target/site/jacoco/jacoco.xml"
+          JACOCO_REPORT_PATH="${SONAR_JACOCO_REPORT_PATH:-target/site/jacoco/jacoco.xml}"
           if [ ! -s "${JACOCO_REPORT_PATH}" ]; then
             echo "ERROR: JaCoCo report not found or empty at ${JACOCO_REPORT_PATH}"
             ls -la target/site || true
@@ -50,7 +50,7 @@ jobs:
               -Dsonar.projectKey=DeniseRea_sqa-inventory-project \
               -Dsonar.organization=deniserea \
               -Dsonar.host.url=https://sonarcloud.io \
-              -Dsonar.coverage.jacoco.xmlReportPaths=${JACOCO_REPORT_PATH} \
+              -Dsonar.coverage.jacoco.xmlReportPaths="${JACOCO_REPORT_PATH}" \
               -Dsonar.ws.timeout=300 \
               -DskipDocker=true && break
 
