@@ -63,13 +63,7 @@
 			<scope>runtime</scope>
 		</dependency>
 
-		<!-- Docker Compose integration (Portability) -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-docker-compose</artifactId>
-			<scope>runtime</scope>
-			<optional>true</optional>
-		</dependency>
+
 
 		<!-- PostgreSQL driver -->
 		<dependency>
@@ -269,6 +263,7 @@
 					</execution>
 				</executions>
 				<configuration>
+					<generateReports>true</generateReports>
 					<testFilesDirectory>${project.basedir}/src/test/jmeter</testFilesDirectory>
 					<resultsDirectory>${project.build.directory}/jmeter-reports</resultsDirectory>
 				</configuration>
