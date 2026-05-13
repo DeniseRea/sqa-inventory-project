@@ -64,6 +64,32 @@ class StockMovementTest {
     }
 
     @Test
+    @DisplayName("Should throw on null quantity")
+    void shouldThrowOnNullQuantity() {
+        StockMovement movement = StockMovement.builder()
+                .productId(1L)
+                .type(MovementType.SALIDA)
+                .quantity(null)
+                .reason(MovementReason.VENTA)
+                .build();
+
+        assertThrows(IllegalArgumentException.class, movement::validate);
+    }
+
+    @Test
+    @DisplayName("Should throw on negative quantity")
+    void shouldThrowOnNegativeQuantity() {
+        StockMovement movement = StockMovement.builder()
+                .productId(1L)
+                .type(MovementType.SALIDA)
+                .quantity(-2)
+                .reason(MovementReason.VENTA)
+                .build();
+
+        assertThrows(IllegalArgumentException.class, movement::validate);
+    }
+
+    @Test
     @DisplayName("Should throw on null reason")
     void shouldThrowOnNullReason() {
         StockMovement movement = StockMovement.builder()

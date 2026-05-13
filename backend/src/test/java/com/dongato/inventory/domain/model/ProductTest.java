@@ -35,6 +35,22 @@ class ProductTest {
         }
 
         @Test
+        @DisplayName("Should add stock from null stock value")
+        void shouldAddStockFromNullStockValue() {
+            Product product = Product.builder()
+                    .name("Americano")
+                    .price(new BigDecimal("2.50"))
+                    .stock(null)
+                    .status(ProductStatus.OUT_OF_STOCK)
+                    .build();
+
+            product.addStock(4);
+
+            assertEquals(4, product.getStock());
+            assertEquals(ProductStatus.AVAILABLE, product.getStatus());
+        }
+
+        @Test
         @DisplayName("Should remove stock and recalculate status")
         void shouldRemoveStockSuccessfully() {
             Product product = Product.builder()
@@ -80,6 +96,19 @@ class ProductTest {
         }
 
         @Test
+        @DisplayName("Should throw exception for zero entry quantity")
+        void shouldThrowOnZeroEntryQuantity() {
+            Product product = Product.builder()
+                    .name("Espresso")
+                    .price(new BigDecimal("2.00"))
+                    .stock(10)
+                    .build();
+
+            assertThrows(IllegalArgumentException.class,
+                    () -> product.addStock(0));
+        }
+
+        @Test
         @DisplayName("Should throw exception for zero exit quantity")
         void shouldThrowOnZeroExitQuantity() {
             Product product = Product.builder()
@@ -90,6 +119,35 @@ class ProductTest {
 
             assertThrows(IllegalArgumentException.class,
                     () -> product.removeStock(0));
+        }
+
+        @Test
+        @DisplayName("Should throw exception for negative exit quantity")
+        void shouldThrowOnNegativeExitQuantity() {
+            Product product = Product.builder()
+                    .name("Mocha")
+                    .price(new BigDecimal("4.00"))
+                    .stock(10)
+                    .build();
+
+            assertThrows(IllegalArgumentException.class,
+                    () -> product.removeStock(-1));
+        }
+
+        @Test
+        @DisplayName("Should treat null stock as zero when removing")
+        void shouldTreatNullStockAsZeroWhenRemoving() {
+            Product product = Product.builder()
+                    .name("Mocha")
+                    .price(new BigDecimal("4.00"))
+                    .stock(null)
+                    .build();
+
+            IllegalStateException ex = assertThrows(
+                    IllegalStateException.class,
+                    () -> product.removeStock(1));
+
+            assertTrue(ex.getMessage().contains("available=0"));
         }
     }
 
@@ -139,11 +197,35 @@ class ProductTest {
         }
 
         @Test
+        @DisplayName("Should throw on null name")
+        void shouldThrowOnNullName() {
+            Product product = Product.builder()
+                    .name(null)
+                    .price(new BigDecimal("2.50"))
+                    .stock(0)
+                    .build();
+
+            assertThrows(IllegalArgumentException.class, product::validate);
+        }
+
+        @Test
         @DisplayName("Should throw on negative price")
         void shouldThrowOnNegativePrice() {
             Product product = Product.builder()
                     .name("Test")
                     .price(new BigDecimal("-1.00"))
+                    .stock(0)
+                    .build();
+
+            assertThrows(IllegalArgumentException.class, product::validate);
+        }
+
+        @Test
+        @DisplayName("Should throw on null price")
+        void shouldThrowOnNullPrice() {
+            Product product = Product.builder()
+                    .name("Test")
+                    .price(null)
                     .stock(0)
                     .build();
 
@@ -169,6 +251,18 @@ class ProductTest {
                     .name("Americano")
                     .price(new BigDecimal("2.50"))
                     .stock(10)
+                    .build();
+
+            assertDoesNotThrow(product::validate);
+        }
+
+        @Test
+        @DisplayName("Should pass validation when stock is null")
+        void shouldPassValidationWhenStockIsNull() {
+            Product product = Product.builder()
+                    .name("Americano")
+                    .price(new BigDecimal("2.50"))
+                    .stock(null)
                     .build();
 
             assertDoesNotThrow(product::validate);

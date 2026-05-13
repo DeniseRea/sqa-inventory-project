@@ -7,9 +7,13 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.core.MethodParameter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.validation.BeanPropertyBindingResult;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -77,6 +81,32 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
+    @DisplayName("Should return 400 with field errors for validation failures")
+    void shouldReturn400WithFieldErrorsForValidationFailures() throws NoSuchMethodException {
+        MethodParameter parameter = new MethodParameter(
+                GlobalExceptionHandlerTest.class.getDeclaredMethod("validationEndpoint", String.class),
+                0);
+        BeanPropertyBindingResult bindingResult =
+                new BeanPropertyBindingResult(new ValidationFixture(), "validationFixture");
+        bindingResult.addError(new FieldError(
+                "validationFixture",
+                "name",
+                "Name is required"));
+        MethodArgumentNotValidException ex =
+                new MethodArgumentNotValidException(parameter, bindingResult);
+
+        ResponseEntity<ApiErrorDTO> response = handler.handleValidation(ex, mockRequest);
+
+        assertEquals(HttpStatus.BAD_REQUEST.value(), response.getStatusCode().value());
+        assertNotNull(response.getBody());
+        assertEquals("Validation Failed", response.getBody().getError());
+        assertEquals("One or more fields have validation errors", response.getBody().getMessage());
+        assertEquals(1, response.getBody().getFieldErrors().size());
+        assertEquals("name", response.getBody().getFieldErrors().get(0).getField());
+        assertEquals("Name is required", response.getBody().getFieldErrors().get(0).getMessage());
+    }
+
+    @Test
     @DisplayName("Should return 500 for generic unexpected exceptions")
     void shouldReturn500ForGenericException() {
         Exception ex = new RuntimeException("Something broke");
@@ -106,5 +136,12 @@ class GlobalExceptionHandlerTest {
 
         assertFalse(response.getBody().getMessage().contains("NullPointerException"));
         assertFalse(response.getBody().getMessage().contains("secret internal detail"));
+    }
+
+    @SuppressWarnings("unused")
+    private void validationEndpoint(String name) {
+    }
+
+    private static final class ValidationFixture {
     }
 }
