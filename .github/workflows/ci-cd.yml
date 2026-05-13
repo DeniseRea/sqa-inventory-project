@@ -42,7 +42,8 @@ jobs:
           fi
           echo "JaCoCo report ready at ${JACOCO_REPORT_PATH}"
 
-          MAX_ATTEMPTS=2
+          MAX_ATTEMPTS="${SONAR_MAX_ATTEMPTS:-2}"
+          RETRY_DELAY_SECONDS="${SONAR_RETRY_DELAY_SECONDS:-20}"
           for attempt in $(seq 1 "${MAX_ATTEMPTS}"); do
             mvn -B \
               org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
@@ -57,8 +58,8 @@ jobs:
               echo "ERROR: Sonar analysis failed after ${MAX_ATTEMPTS} attempts"
               exit 1
             fi
-            echo "Sonar analysis failed (attempt ${attempt}), retrying in 20s..."
-            sleep 20
+            echo "Sonar analysis failed (attempt ${attempt}), retrying in ${RETRY_DELAY_SECONDS}s..."
+            sleep "${RETRY_DELAY_SECONDS}"
           done
 
       - name: Upload Coverage Report
