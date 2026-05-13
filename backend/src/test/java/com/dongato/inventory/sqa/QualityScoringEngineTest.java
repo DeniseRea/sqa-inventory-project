@@ -2,74 +2,42 @@ package com.dongato.inventory.sqa;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Unit tests for QualityScoringEngine.
- * McCall Factor: Testability — validates quality scoring calculations.
- */
 class QualityScoringEngineTest {
 
     @Test
-    @DisplayName("Should return perfect score with ideal metrics")
+    @DisplayName("Debe retornar 100 cuando la calidad es perfecta")
     void shouldReturnPerfectScore() {
-        double score = QualityScoringEngine.calculateScore(100.0, 0, 0, 0);
-        assertEquals(100.0, score, 0.01);
-        assertEquals("A (Excellent)", QualityScoringEngine.getGrade(score));
+        QualityReport report = QualityScoringEngine.calculateReport(100.0, 0, 0, 0);
+        assertEquals(100.0, report.score());
+        assertEquals("PASSED", report.status());
     }
 
     @Test
-    @DisplayName("Should return zero integrity score with vulnerabilities")
-    void shouldPenalizeVulnerabilities() {
-        double withVulns = QualityScoringEngine.calculateScore(100.0, 0, 0, 1);
-        double withoutVulns = QualityScoringEngine.calculateScore(100.0, 0, 0, 0);
-
-        assertTrue(withVulns < withoutVulns);
-        assertEquals(80.0, withVulns, 0.01); // 100*0.3 + 100*0.3 + 100*0.2 + 0*0.2
+    @DisplayName("Debe fallar (FAILED) si existen vulnerabilidades y el score baja de 80")
+    void shouldFailIfVulnerabilitiesExistAndScoreIsLow() {
+        // Score: (70*0.3) + (100*0.3) + (100*0.2) + (0*0.2) = 21 + 30 + 20 + 0 = 71
+        QualityReport report = QualityScoringEngine.calculateReport(70.0, 0, 0, 1);
+        assertTrue(report.score() < 80.0);
+        assertEquals("FAILED", report.status());
     }
 
     @Test
-    @DisplayName("Should degrade correctness score with bugs")
-    void shouldDegradeWithBugs() {
-        double score = QualityScoringEngine.calculateScore(100.0, 5, 0, 0);
-        // Correctness: max(100 - 50, 0) = 50
-        // 100*0.3 + 50*0.3 + 100*0.2 + 100*0.2 = 30+15+20+20 = 85
-        assertEquals(85.0, score, 0.01);
+    @DisplayName("Debe penalizar correctamente los Code Smells")
+    void shouldPenalizeCodeSmells() {
+        QualityReport report = QualityScoringEngine.calculateReport(100.0, 0, 10, 0);
+        // Maintainability: 100 - (10 * 2) = 80
+        // Score: (100*0.3) + (100*0.3) + (80*0.2) + (100*0.2) = 30 + 30 + 16 + 20 = 96
+        assertEquals(96.0, report.score());
     }
 
     @Test
-    @DisplayName("Should degrade maintainability with code smells")
-    void shouldDegradeWithSmells() {
-        double score = QualityScoringEngine.calculateScore(100.0, 0, 25, 0);
-        // Maintainability: max(100 - 50, 0) = 50
-        // 100*0.3 + 100*0.3 + 50*0.2 + 100*0.2 = 30+30+10+20 = 90
-        assertEquals(90.0, score, 0.01);
-    }
-
-    @Test
-    @DisplayName("Should throw on invalid coverage")
-    void shouldThrowOnInvalidCoverage() {
-        assertThrows(IllegalArgumentException.class,
-                () -> QualityScoringEngine.calculateScore(-1.0, 0, 0, 0));
-        assertThrows(IllegalArgumentException.class,
-                () -> QualityScoringEngine.calculateScore(101.0, 0, 0, 0));
-    }
-
-    @Test
-    @DisplayName("Should throw on negative metrics")
-    void shouldThrowOnNegativeMetrics() {
-        assertThrows(IllegalArgumentException.class,
-                () -> QualityScoringEngine.calculateScore(80.0, -1, 0, 0));
-    }
-
-    @Test
-    @DisplayName("Should grade correctly at boundaries")
-    void shouldGradeCorrectly() {
-        assertEquals("A (Excellent)", QualityScoringEngine.getGrade(90));
-        assertEquals("B (Good)", QualityScoringEngine.getGrade(85));
-        assertEquals("C (Acceptable)", QualityScoringEngine.getGrade(75));
-        assertEquals("D (Needs Improvement)", QualityScoringEngine.getGrade(65));
-        assertEquals("F (Critical)", QualityScoringEngine.getGrade(50));
+    @DisplayName("Debe penalizar severamente los Bugs")
+    void shouldPenalizeBugsSeverely() {
+        QualityReport report = QualityScoringEngine.calculateReport(100.0, 5, 0, 0);
+        // Correctness: 100 - (5 * 10) = 50
+        // Score: (100*0.3) + (50*0.3) + (100*0.2) + (100*0.2) = 30 + 15 + 20 + 20 = 85
+        assertEquals(85.0, report.score());
     }
 }

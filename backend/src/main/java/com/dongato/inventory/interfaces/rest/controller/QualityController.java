@@ -1,14 +1,15 @@
-package com.sqa_inventory.tasks.sqa;
+package com.dongato.inventory.interfaces.rest.controller;
 
+import com.dongato.inventory.sqa.QualityReport;
+import com.dongato.inventory.sqa.QualityService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import lombok.RequiredArgsConstructor;
 
 /**
  * Controlador REST para exponer las métricas de calidad del Modelo de McCall.
- * Impacto McCall: Interoperability (API estándar) e Integrity (Validación de entrada).
  */
 @RestController
 @RequestMapping("/api/v1/quality")
