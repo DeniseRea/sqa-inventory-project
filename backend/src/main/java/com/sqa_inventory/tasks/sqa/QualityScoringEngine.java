@@ -26,7 +26,7 @@ public class QualityScoringEngine {
      * Calcula el puntaje de calidad y genera un reporte detallado con recomendaciones (PDCA - ACT).
      */
     public static QualityReport calculateReport(double coverage, int bugs, int smells, int vulnerabilities) {
-        double testabilityScore = Math.clamp(coverage, 0.0, 100.0);
+        double testabilityScore = Math.min(Math.max(coverage, 0.0), 100.0);
         double correctnessScore = Math.max(100.0 - (bugs * 10.0), 0.0);
         double maintainabilityScore = Math.max(100.0 - (smells * 2.0), 0.0);
         double integrityScore = (vulnerabilities == 0) ? 100.0 : 0.0;
