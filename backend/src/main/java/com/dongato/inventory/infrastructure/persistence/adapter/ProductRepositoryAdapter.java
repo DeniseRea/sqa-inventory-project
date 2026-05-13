@@ -10,7 +10,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * Adapter that implements ProductRepositoryPort using Spring Data JPA.
@@ -40,28 +39,28 @@ public class ProductRepositoryAdapter implements ProductRepositoryPort {
     public List<Product> findAll() {
         return jpaRepository.findAll().stream()
                 .map(ProductPersistenceMapper::toDomain)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
     public List<Product> findByCategoryId(Long categoryId) {
         return jpaRepository.findByCategoryId(categoryId).stream()
                 .map(ProductPersistenceMapper::toDomain)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
     public List<Product> findByStatus(ProductStatus status) {
         return jpaRepository.findByStatus(status).stream()
                 .map(ProductPersistenceMapper::toDomain)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
     public List<Product> findByNameContainingIgnoreCase(String name) {
         return jpaRepository.findByNameContainingIgnoreCase(name).stream()
                 .map(ProductPersistenceMapper::toDomain)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override

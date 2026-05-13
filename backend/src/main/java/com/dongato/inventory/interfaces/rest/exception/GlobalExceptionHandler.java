@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Global exception handler for the REST API.
@@ -55,7 +54,7 @@ public class GlobalExceptionHandler {
         List<ApiErrorDTO.FieldErrorDTO> fieldErrors = ex.getBindingResult()
                 .getFieldErrors().stream()
                 .map(this::mapFieldError)
-                .collect(Collectors.toList());
+                .toList();
 
         ApiErrorDTO error = ApiErrorDTO.builder()
                 .status(HttpStatus.BAD_REQUEST.value())

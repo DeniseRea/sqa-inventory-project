@@ -1,5 +1,8 @@
 package com.dongato.inventory.sqa;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Quality Scoring Engine based on the McCall Quality Model.
  * <p>
@@ -20,18 +23,15 @@ public class QualityScoringEngine {
     private static final double WEIGHT_MAINTAINABILITY = 0.20;
     private static final double WEIGHT_INTEGRITY       = 0.20;
 
+    private static final double MIN_ACCEPTABLE_SCORE = 80.0;
+    private static final double MIN_ACCEPTABLE_COVERAGE = 85.0;
+
     private QualityScoringEngine() {
         // Utility class — prevent instantiation
     }
 
     /**
      * Calculates the overall quality score (0-100).
-     *
-     * @param coveragePercent code coverage percentage from JaCoCo
-     * @param bugs            bug count from SpotBugs
-     * @param smells          code smell count from SonarQube
-     * @param vulns           vulnerability count from OWASP Dependency Check
-     * @return composite quality score (0-100)
      */
     public static double calculateScore(double coveragePercent, int bugs, int smells, int vulns) {
         if (coveragePercent < 0 || coveragePercent > 100) {
@@ -50,6 +50,48 @@ public class QualityScoringEngine {
                (correctnessScore     * WEIGHT_CORRECTNESS)     +
                (maintainabilityScore * WEIGHT_MAINTAINABILITY) +
                (integrityScore       * WEIGHT_INTEGRITY);
+    }
+
+    /**
+     * Calculates the quality report with recommendations.
+     */
+    public static QualityReport calculateReport(double coverage, int bugs, int smells, int vulnerabilities) {
+        double score = calculateScore(coverage, bugs, smells, vulnerabilities);
+        String status = (score >= MIN_ACCEPTABLE_SCORE) ? "PASSED" : "FAILED";
+        List<String> recommendations = generateRecommendations(coverage, bugs, smells, vulnerabilities);
+
+        return new QualityReport(
+            coverage,
+            bugs,
+            smells,
+            vulnerabilities,
+            score,
+            status,
+            recommendations
+        );
+    }
+
+    private static List<String> generateRecommendations(double coverage, int bugs, int smells, int vulnerabilities) {
+        List<String> recommendations = new ArrayList<>();
+
+        if (vulnerabilities > 0) {
+            recommendations.add("CRITICAL: Update dependencies and fix CVEs immediately (Integrity).");
+        }
+        if (bugs > 0) {
+            recommendations.add("HIGH: Prioritize fixing functional defects to improve Correctness.");
+        }
+        if (coverage < MIN_ACCEPTABLE_COVERAGE) {
+            recommendations.add("MEDIUM: Increase unit test coverage to reach at least 85% (Testability).");
+        }
+        if (smells > 10) {
+            recommendations.add("LOW: Schedule a refactoring sprint to reduce technical debt (Maintainability).");
+        }
+
+        if (recommendations.isEmpty()) {
+            recommendations.add("Quality standards met. Continue with continuous monitoring.");
+        }
+
+        return recommendations;
     }
 
     /**

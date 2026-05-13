@@ -58,17 +58,12 @@ Para asegurar que los tests de JMeter se puedan ejecutar en local sin intervenci
 
 ---
 
-## 4. Instrucciones de Ejecución SQA
+## 5. Documentación Adicional Detallada
 
-Cualquier desarrollador (o sistema CI/CD como GitHub Actions) puede auditar la calidad del software con un solo comando:
+Para una revisión granular de cada caso de prueba, escenarios validados y configuración técnica específica de cada herramienta, consulte el siguiente documento:
 
-```bash
-# Limpia, compila, ejecuta pruebas unitarias (Mockito), 
-# verifica la cobertura (JaCoCo), corre OWASP Dependency Check 
-# e inicia las pruebas de rendimiento (JMeter).
-./mvnw clean verify
-```
+*   [**Detalle Exhaustivo de la Suite de Pruebas (TEST_SUITE_DETAILS.md)**](./TEST_SUITE_DETAILS.md)
 
-### Resultados Esperados
-* **Build Success:** Significa que el código cubre el 85%, no tiene vulnerabilidades altas, y la API responde a 50 usuarios concurrentes en menos de 200ms.
+---
+**Build Success:** Significa que el código cubre el 85%, no tiene vulnerabilidades altas, y la API responde a 50 usuarios concurrentes en menos de 200ms.
 * **Build Failure:** Ocurrirá si alguna de las métricas anteriores no se cumple, lo cual detendrá el despliegue automático hacia entornos de producción, salvaguardando la calidad del sistema final.
