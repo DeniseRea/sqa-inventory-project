@@ -32,12 +32,33 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          mvn -B test \
-            org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
-            -Dsonar.projectKey=DeniseRea_sqa-inventory-project \
-            -Dsonar.organization=deniserea \
-            -Dsonar.host.url=https://sonarcloud.io \
-            -DskipDocker=true
+          mvn -B test -DskipDocker=true
+
+          JACOCO_REPORT_PATH="target/site/jacoco/jacoco.xml"
+          if [ ! -s "${JACOCO_REPORT_PATH}" ]; then
+            echo "ERROR: JaCoCo report not found or empty at ${JACOCO_REPORT_PATH}"
+            ls -la target/site || true
+            exit 1
+          fi
+          echo "JaCoCo report ready at ${JACOCO_REPORT_PATH}"
+
+          for attempt in 1 2; do
+            mvn -B \
+              org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+              -Dsonar.projectKey=DeniseRea_sqa-inventory-project \
+              -Dsonar.organization=deniserea \
+              -Dsonar.host.url=https://sonarcloud.io \
+              -Dsonar.coverage.jacoco.xmlReportPaths=${JACOCO_REPORT_PATH} \
+              -Dsonar.ws.timeout=300 \
+              -DskipDocker=true && break
+
+            if [ "${attempt}" -eq 2 ]; then
+              echo "ERROR: Sonar analysis failed after retry"
+              exit 1
+            fi
+            echo "Sonar analysis failed (attempt ${attempt}), retrying in 20s..."
+            sleep 20
+          done
 
       - name: Upload Coverage Report
         uses: actions/upload-artifact@v4
