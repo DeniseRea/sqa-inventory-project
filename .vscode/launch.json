@@ -2,10 +2,20 @@
     "configurations": [
         {
             "type": "java",
-            "name": "Spring Boot-BackendApplication<backend>",
+            "name": "Spring Boot-DonGatoInventoryApplication<backend>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}/backend",
+            "mainClass": "com.dongato.inventory.DonGatoInventoryApplication",
+            "projectName": "inventory",
+            "args": "",
+            "envFile": "${workspaceFolder}/backend/.env"
+        },
+        {
+            "type": "java",
+            "name": "Spring Boot-DonGatoInventoryApplication<backend>",
             "request": "launch",
             "cwd": "${workspaceFolder}",
-            "mainClass": "com.sqa_inventory.backend.BackendApplication",
+            "mainClass": "com.dongato.inventory.DonGatoInventoryApplication",
             "projectName": "backend",
             "args": "",
             "envFile": "${workspaceFolder}/.env"
