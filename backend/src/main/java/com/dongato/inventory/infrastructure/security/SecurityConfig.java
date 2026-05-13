@@ -1,6 +1,7 @@
 package com.dongato.inventory.infrastructure.security;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -34,6 +35,10 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    @Value("${app.security.admin.password}")
+    private String adminPassword;
+    @Value("${app.security.user.password}")
+    private String userPassword;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -61,13 +66,13 @@ public class SecurityConfig {
         // In-memory user for educational project — production would use a DB-backed UserDetailsService
         var admin = User.builder()
                 .username("admin")
-                .password(passwordEncoder.encode("dongato2026"))
+                .password(passwordEncoder.encode(adminPassword))
                 .roles("ADMIN")
                 .build();
 
         var user = User.builder()
                 .username("cajero")
-                .password(passwordEncoder.encode("cafe123"))
+                .password(passwordEncoder.encode(userPassword))
                 .roles("USER")
                 .build();
 
