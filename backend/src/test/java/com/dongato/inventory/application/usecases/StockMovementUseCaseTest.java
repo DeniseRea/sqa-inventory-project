@@ -13,6 +13,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -35,18 +36,38 @@ class StockMovementUseCaseTest {
     @InjectMocks
     private StockMovementUseCase stockMovementUseCase;
 
+    // ─── helpers ─────────────────────────────────────────────────────────────
+
+    private Product productWithStock(int stock) {
+        return Product.builder()
+                .id(1L).name("Americano")
+                .price(new BigDecimal("2.50"))
+                .stock(stock)
+                .status(stock > 0 ? ProductStatus.AVAILABLE : ProductStatus.OUT_OF_STOCK)
+                .build();
+    }
+
+    private StockMovement entradaMovement(int qty) {
+        return StockMovement.builder()
+                .productId(1L).type(MovementType.ENTRADA)
+                .quantity(qty).reason(MovementReason.REPOSICION).build();
+    }
+
+    private StockMovement salidaMovement(int qty) {
+        return StockMovement.builder()
+                .productId(1L).type(MovementType.SALIDA)
+                .quantity(qty).reason(MovementReason.VENTA).build();
+    }
+
+    // ─── registerMovement ENTRADA ────────────────────────────────────────────
+
     @Test
     @DisplayName("Should register ENTRADA and increase product stock")
     void shouldRegisterEntradaSuccessfully() {
-        Product product = Product.builder()
-                .id(1L).name("Americano").price(new BigDecimal("2.50"))
-                .stock(10).status(ProductStatus.AVAILABLE).build();
-        StockMovement movement = StockMovement.builder()
-                .productId(1L).type(MovementType.ENTRADA)
-                .quantity(5).reason(MovementReason.REPOSICION).build();
-        StockMovement saved = StockMovement.builder()
-                .id(1L).productId(1L).type(MovementType.ENTRADA)
-                .quantity(5).reason(MovementReason.REPOSICION).build();
+        Product product = productWithStock(10);
+        StockMovement movement = entradaMovement(5);
+        StockMovement saved = StockMovement.builder().id(1L).productId(1L)
+                .type(MovementType.ENTRADA).quantity(5).reason(MovementReason.REPOSICION).build();
 
         when(productRepository.findById(1L)).thenReturn(Optional.of(product));
         when(productRepository.save(any(Product.class))).thenReturn(product);
@@ -62,17 +83,32 @@ class StockMovementUseCaseTest {
     }
 
     @Test
+    @DisplayName("Should register ENTRADA on a product with zero stock and make it AVAILABLE")
+    void shouldRegisterEntradaOnZeroStock() {
+        Product product = productWithStock(0);
+        StockMovement movement = entradaMovement(10);
+        StockMovement saved = StockMovement.builder().id(2L).productId(1L)
+                .type(MovementType.ENTRADA).quantity(10).reason(MovementReason.REPOSICION).build();
+
+        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+        when(productRepository.save(any(Product.class))).thenReturn(product);
+        when(movementRepository.save(any(StockMovement.class))).thenReturn(saved);
+
+        stockMovementUseCase.registerMovement(movement);
+
+        assertEquals(10, product.getStock());
+        assertEquals(ProductStatus.AVAILABLE, product.getStatus());
+    }
+
+    // ─── registerMovement SALIDA ─────────────────────────────────────────────
+
+    @Test
     @DisplayName("Should register SALIDA and decrease product stock")
     void shouldRegisterSalidaSuccessfully() {
-        Product product = Product.builder()
-                .id(1L).name("Latte").price(new BigDecimal("3.75"))
-                .stock(10).status(ProductStatus.AVAILABLE).build();
-        StockMovement movement = StockMovement.builder()
-                .productId(1L).type(MovementType.SALIDA)
-                .quantity(3).reason(MovementReason.VENTA).build();
-        StockMovement saved = StockMovement.builder()
-                .id(2L).productId(1L).type(MovementType.SALIDA)
-                .quantity(3).reason(MovementReason.VENTA).build();
+        Product product = productWithStock(10);
+        StockMovement movement = salidaMovement(3);
+        StockMovement saved = StockMovement.builder().id(3L).productId(1L)
+                .type(MovementType.SALIDA).quantity(3).reason(MovementReason.VENTA).build();
 
         when(productRepository.findById(1L)).thenReturn(Optional.of(product));
         when(productRepository.save(any(Product.class))).thenReturn(product);
@@ -82,52 +118,16 @@ class StockMovementUseCaseTest {
 
         assertNotNull(result);
         assertEquals(7, product.getStock());
-        verify(productRepository).save(product);
+        assertEquals(ProductStatus.AVAILABLE, product.getStatus());
     }
 
     @Test
-    @DisplayName("Should throw InsufficientStockException on SALIDA with insufficient stock")
-    void shouldThrowOnInsufficientStock() {
-        Product product = Product.builder()
-                .id(1L).name("Espresso").price(new BigDecimal("2.00"))
-                .stock(2).status(ProductStatus.AVAILABLE).build();
-        StockMovement movement = StockMovement.builder()
-                .productId(1L).type(MovementType.SALIDA)
-                .quantity(5).reason(MovementReason.VENTA).build();
-
-        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
-
-        assertThrows(InsufficientStockException.class,
-                () -> stockMovementUseCase.registerMovement(movement));
-        verify(productRepository, never()).save(any());
-        verify(movementRepository, never()).save(any());
-    }
-
-    @Test
-    @DisplayName("Should throw when product not found")
-    void shouldThrowWhenProductNotFound() {
-        StockMovement movement = StockMovement.builder()
-                .productId(99L).type(MovementType.ENTRADA)
-                .quantity(5).reason(MovementReason.REPOSICION).build();
-
-        when(productRepository.findById(99L)).thenReturn(Optional.empty());
-
-        assertThrows(ResourceNotFoundException.class,
-                () -> stockMovementUseCase.registerMovement(movement));
-    }
-
-    @Test
-    @DisplayName("Should set status to OUT_OF_STOCK when stock reaches zero")
-    void shouldSetOutOfStockWhenZero() {
-        Product product = Product.builder()
-                .id(1L).name("Mocha").price(new BigDecimal("4.00"))
-                .stock(5).status(ProductStatus.AVAILABLE).build();
-        StockMovement movement = StockMovement.builder()
-                .productId(1L).type(MovementType.SALIDA)
-                .quantity(5).reason(MovementReason.VENTA).build();
-        StockMovement saved = StockMovement.builder()
-                .id(3L).productId(1L).type(MovementType.SALIDA)
-                .quantity(5).reason(MovementReason.VENTA).build();
+    @DisplayName("Should set status to OUT_OF_STOCK when SALIDA drains all stock")
+    void shouldSetOutOfStockWhenStockReachesZero() {
+        Product product = productWithStock(5);
+        StockMovement movement = salidaMovement(5);
+        StockMovement saved = StockMovement.builder().id(4L).productId(1L)
+                .type(MovementType.SALIDA).quantity(5).reason(MovementReason.VENTA).build();
 
         when(productRepository.findById(1L)).thenReturn(Optional.of(product));
         when(productRepository.save(any(Product.class))).thenReturn(product);
@@ -137,5 +137,102 @@ class StockMovementUseCaseTest {
 
         assertEquals(0, product.getStock());
         assertEquals(ProductStatus.OUT_OF_STOCK, product.getStatus());
+    }
+
+    @Test
+    @DisplayName("Should throw InsufficientStockException when SALIDA exceeds available stock")
+    void shouldThrowOnInsufficientStock() {
+        Product product = productWithStock(2);
+        StockMovement movement = salidaMovement(5);
+
+        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+
+        assertThrows(InsufficientStockException.class,
+                () -> stockMovementUseCase.registerMovement(movement));
+        verify(productRepository, never()).save(any());
+        verify(movementRepository, never()).save(any());
+    }
+
+    // ─── validation ──────────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("Should throw ResourceNotFoundException when product not found on movement")
+    void shouldThrowWhenProductNotFound() {
+        StockMovement movement = entradaMovement(5);
+        when(productRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> stockMovementUseCase.registerMovement(movement));
+    }
+
+    @Test
+    @DisplayName("Should throw IllegalArgumentException when movement quantity is zero")
+    void shouldThrowWhenQuantityIsZero() {
+        StockMovement movement = StockMovement.builder()
+                .productId(1L).type(MovementType.ENTRADA)
+                .quantity(0).reason(MovementReason.REPOSICION).build();
+
+        assertThrows(IllegalArgumentException.class,
+                () -> stockMovementUseCase.registerMovement(movement));
+    }
+
+    @Test
+    @DisplayName("Should throw IllegalArgumentException when movement type is null")
+    void shouldThrowWhenMovementTypeIsNull() {
+        StockMovement movement = StockMovement.builder()
+                .productId(1L).type(null)
+                .quantity(5).reason(MovementReason.REPOSICION).build();
+
+        assertThrows(IllegalArgumentException.class,
+                () -> stockMovementUseCase.registerMovement(movement));
+    }
+
+    @Test
+    @DisplayName("Should throw IllegalArgumentException when reason is null")
+    void shouldThrowWhenReasonIsNull() {
+        StockMovement movement = StockMovement.builder()
+                .productId(1L).type(MovementType.ENTRADA)
+                .quantity(5).reason(null).build();
+
+        assertThrows(IllegalArgumentException.class,
+                () -> stockMovementUseCase.registerMovement(movement));
+    }
+
+    // ─── findByProductId ─────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("Should return movements for an existing product")
+    void shouldFindMovementsByProductId() {
+        when(productRepository.existsById(1L)).thenReturn(true);
+        when(movementRepository.findByProductId(1L))
+                .thenReturn(List.of(entradaMovement(5), salidaMovement(2)));
+
+        List<StockMovement> result = stockMovementUseCase.findByProductId(1L);
+
+        assertEquals(2, result.size());
+        verify(movementRepository).findByProductId(1L);
+    }
+
+    @Test
+    @DisplayName("Should throw ResourceNotFoundException when finding movements for non-existent product")
+    void shouldThrowWhenFindingMovementsForNonExistentProduct() {
+        when(productRepository.existsById(99L)).thenReturn(false);
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> stockMovementUseCase.findByProductId(99L));
+        verify(movementRepository, never()).findByProductId(any());
+    }
+
+    // ─── findAll ─────────────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("Should return all stock movements")
+    void shouldFindAllMovements() {
+        when(movementRepository.findAll())
+                .thenReturn(List.of(entradaMovement(5), salidaMovement(3)));
+
+        List<StockMovement> result = stockMovementUseCase.findAll();
+
+        assertEquals(2, result.size());
     }
 }
