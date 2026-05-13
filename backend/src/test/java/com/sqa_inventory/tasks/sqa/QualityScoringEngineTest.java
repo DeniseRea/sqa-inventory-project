@@ -1,0 +1,43 @@
+package com.sqa_inventory.tasks.sqa;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+class QualityScoringEngineTest {
+
+    @Test
+    @DisplayName("Debe retornar 100 cuando la calidad es perfecta")
+    void shouldReturnPerfectScore() {
+        QualityReport report = QualityScoringEngine.calculateReport(100.0, 0, 0, 0);
+        assertEquals(100.0, report.score());
+        assertEquals("PASSED", report.status());
+    }
+
+    @Test
+    @DisplayName("Debe fallar (FAILED) si existen vulnerabilidades y el score baja de 80")
+    void shouldFailIfVulnerabilitiesExistAndScoreIsLow() {
+        // Score: (70*0.3) + (100*0.3) + (100*0.2) + (0*0.2) = 21 + 30 + 20 + 0 = 71
+        QualityReport report = QualityScoringEngine.calculateReport(70.0, 0, 0, 1);
+        assertTrue(report.score() < 80.0);
+        assertEquals("FAILED", report.status());
+    }
+
+    @Test
+    @DisplayName("Debe penalizar correctamente los Code Smells")
+    void shouldPenalizeCodeSmells() {
+        QualityReport report = QualityScoringEngine.calculateReport(100.0, 0, 10, 0);
+        // Maintainability: 100 - (10 * 2) = 80
+        // Score: (100*0.3) + (100*0.3) + (80*0.2) + (100*0.2) = 30 + 30 + 16 + 20 = 96
+        assertEquals(96.0, report.score());
+    }
+
+    @Test
+    @DisplayName("Debe penalizar severamente los Bugs")
+    void shouldPenalizeBugsSeverely() {
+        QualityReport report = QualityScoringEngine.calculateReport(100.0, 5, 0, 0);
+        // Correctness: 100 - (5 * 10) = 50
+        // Score: (100*0.3) + (50*0.3) + (100*0.2) + (100*0.2) = 30 + 15 + 20 + 20 = 85
+        assertEquals(85.0, report.score());
+    }
+}
