@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: 'postgres:16-alpine'
+    container_name: dongato-postgres
+    environment:
+      POSTGRES_DB: dongato_db
+      POSTGRES_USER: dongato_user
+      POSTGRES_PASSWORD: dongato123
+    ports:
+      - '5432:5432'
+    volumes:
+      - dongato_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dongato_user -d dongato_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  dongato_data:
+    driver: local
