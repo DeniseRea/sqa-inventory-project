@@ -12,7 +12,7 @@ class CategoryEntityTest {
 
     @Test
     @DisplayName("Should set createdAt on persist when null")
-    void shouldSetCreatedAtOnCreate() {
+    void shouldSetCreatedAtOnPersistWhenNull() {
         CategoryEntity entity = new CategoryEntity();
 
         entity.onCreate();
@@ -22,7 +22,7 @@ class CategoryEntityTest {
 
     @Test
     @DisplayName("Should keep existing createdAt on persist")
-    void shouldKeepExistingCreatedAt() {
+    void shouldKeepExistingCreatedAtOnPersist() {
         LocalDateTime now = LocalDateTime.now().minusDays(1);
         CategoryEntity entity = new CategoryEntity();
         entity.setCreatedAt(now);

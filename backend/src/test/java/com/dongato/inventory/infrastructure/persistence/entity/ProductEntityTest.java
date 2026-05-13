@@ -12,7 +12,7 @@ class ProductEntityTest {
 
     @Test
     @DisplayName("Should set createdAt on persist when null")
-    void shouldSetCreatedAtOnCreate() {
+    void shouldSetCreatedAtOnPersistWhenNull() {
         ProductEntity entity = new ProductEntity();
 
         entity.onCreate();
@@ -22,7 +22,7 @@ class ProductEntityTest {
 
     @Test
     @DisplayName("Should keep existing createdAt on persist")
-    void shouldKeepExistingCreatedAt() {
+    void shouldKeepExistingCreatedAtOnPersist() {
         LocalDateTime now = LocalDateTime.now().minusHours(2);
         ProductEntity entity = new ProductEntity();
         entity.setCreatedAt(now);

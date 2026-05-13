@@ -12,7 +12,7 @@ class StockMovementEntityTest {
 
     @Test
     @DisplayName("Should set createdAt on persist when null")
-    void shouldSetCreatedAtOnCreate() {
+    void shouldSetCreatedAtOnPersistWhenNull() {
         StockMovementEntity entity = new StockMovementEntity();
 
         entity.onCreate();
@@ -22,7 +22,7 @@ class StockMovementEntityTest {
 
     @Test
     @DisplayName("Should keep existing createdAt on persist")
-    void shouldKeepExistingCreatedAt() {
+    void shouldKeepExistingCreatedAtOnPersist() {
         LocalDateTime now = LocalDateTime.now().minusMinutes(30);
         StockMovementEntity entity = new StockMovementEntity();
         entity.setCreatedAt(now);
