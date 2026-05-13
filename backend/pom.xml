@@ -14,10 +14,17 @@
 	<name>dongato-inventory</name>
 	<description>Cafeteria Don Gato - Inventory Management System (SQA Project)</description>
 
-	<properties>
-		<java.version>25</java.version>
-		<sonar.organization>deniserea</sonar.organization>
-	</properties>
+<properties>
+        <java.version>25</java.version> 
+        
+        <jjwt.version>0.11.5</jjwt.version>
+        <sonar.organization>deniserea</sonar.organization>
+        <sonar.projectKey>DeniseRea_sqa-inventory-project</sonar.projectKey>
+        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
+        
+        <!-- Ruta del reporte de JaCoCo -->
+        <sonar.coverage.jacoco.xmlReportPaths>target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
+    </properties>
 
 	<dependencies>
 		<!-- Web & REST (Interoperability) -->
