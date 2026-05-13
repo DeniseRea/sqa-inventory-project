@@ -38,3 +38,18 @@ Thumbs.db
 # Environment
 .env
 *.env.local
+
+# LaTeX build artifacts (keep .tex and .pdf, ignore the rest)
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.listing
+*.lof
+*.log
+*.lot
+*.out
+*.synctex.gz
+*.toc
+*.xdv

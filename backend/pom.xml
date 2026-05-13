@@ -130,7 +130,22 @@
 							<artifactId>lombok</artifactId>
 						</exclude>
 					</excludes>
+					<jmxPort>9005</jmxPort>
 				</configuration>
+				<executions>
+					<execution>
+						<id>pre-integration-test</id>
+						<goals>
+							<goal>start</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>post-integration-test</id>
+						<goals>
+							<goal>stop</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -185,8 +200,85 @@
 						<goals>
 							<goal>report</goal>
 						</goals>
+						<configuration>
+							<excludes>
+								<exclude>com/dongato/inventory/domain/model/**</exclude>
+								<exclude>com/dongato/inventory/DonGatoInventoryApplication.class</exclude>
+								<exclude>com/dongato/inventory/infrastructure/adapters/out/persistence/entity/**</exclude>
+								<exclude>**/dto/**</exclude>
+							</excludes>
+						</configuration>
+					</execution>
+					<execution>
+						<id>jacoco-check</id>
+						<goals>
+							<goal>check</goal>
+						</goals>
+						<configuration>
+							<rules>
+								<rule>
+									<element>BUNDLE</element>
+									<limits>
+										<limit>
+											<counter>LINE</counter>
+											<value>COVEREDRATIO</value>
+											<minimum>0.85</minimum>
+										</limit>
+									</limits>
+								</rule>
+							</rules>
+							<excludes>
+								<exclude>com/dongato/inventory/domain/model/**</exclude>
+								<exclude>com/dongato/inventory/DonGatoInventoryApplication.class</exclude>
+								<exclude>com/dongato/inventory/infrastructure/adapters/out/persistence/entity/**</exclude>
+								<exclude>**/dto/**</exclude>
+							</excludes>
+						</configuration>
 					</execution>
 				</executions>
+			</plugin>
+			<!-- OWASP Dependency Check (Security) -->
+			<plugin>
+				<groupId>org.owasp</groupId>
+				<artifactId>dependency-check-maven</artifactId>
+				<version>11.1.0</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>check</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<!-- JMeter for Load Testing (Performance) -->
+			<plugin>
+				<groupId>com.lazerycode.jmeter</groupId>
+				<artifactId>jmeter-maven-plugin</artifactId>
+				<version>3.8.0</version>
+				<executions>
+					<execution>
+						<id>configuration</id>
+						<goals>
+							<goal>configure</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>jmeter-tests</id>
+						<goals>
+							<goal>jmeter</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>jmeter-check-results</id>
+						<goals>
+							<goal>results</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<testFilesDirectory>${project.basedir}/src/test/jmeter</testFilesDirectory>
+					<resultsDirectory>${project.build.directory}/jmeter-reports</resultsDirectory>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>
