@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { AdminTemplate } from "../components/templates/AdminTemplate";
 import { stockService } from "../services/stockService";
 import { productService } from "../services/productService";
@@ -8,6 +8,7 @@ export const MovementsPage = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   const [newMovement, setNewMovement] = useState({
     productId: "",
     quantity: "",
@@ -15,8 +16,9 @@ export const MovementsPage = () => {
     reason: "REPOSICION",
   });
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
+      setLoading(true);
       const [mData, pData] = await Promise.all([
         stockService.getAll(),
         productService.getAll(),
@@ -28,11 +30,11 @@ export const MovementsPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [fetchData]);
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -62,19 +64,41 @@ export const MovementsPage = () => {
     }));
   }, [newMovement.type]);
 
+  // Filtrado local por texto del nombre del producto
+  const filteredMovements = movements.filter(mov => {
+    const product = products.find(p => p.id === mov.productId);
+    const productName = product ? product.name.toLowerCase() : "";
+    return productName.includes(searchTerm.toLowerCase());
+  });
+
   return (
     <AdminTemplate>
-      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-10">
-        <div>
+      <header className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6 mb-10">
+        <div className="flex-1">
           <div className="flex items-center gap-2 text-[var(--accent)] font-black text-[10px] uppercase tracking-widest mb-2">
             <div className="h-0.5 w-6 bg-[var(--accent)] rounded-full"></div>
             Bitácora
           </div>
-          <h2 className="text-3xl font-bold text-[var(--text-dark)] tracking-tight">Movimientos</h2>
+          <h2 className="text-3xl font-bold text-[var(--text-dark)] tracking-tight mb-4">Movimientos</h2>
+          
+          {/* Filtro por Texto del Artículo */}
+          <div className="relative w-full max-w-sm group">
+            <svg className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[var(--accent)] transition-colors" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input 
+              type="text"
+              placeholder="Filtrar por nombre de producto..."
+              className="w-full pl-10 pr-4 py-2.5 bg-white border border-black/5 rounded-xl outline-none focus:ring-2 focus:ring-[var(--accent)] shadow-sm transition-all text-xs font-bold"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
         </div>
+        
         <button 
           onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 px-6 py-3 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-bold text-sm rounded-xl shadow-lg transition-all"
+          className="flex items-center gap-2 px-6 py-4 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-bold text-sm rounded-2xl shadow-lg transition-all whitespace-nowrap"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
@@ -83,12 +107,12 @@ export const MovementsPage = () => {
         </button>
       </header>
 
-      {loading ? (
+      {loading && movements.length === 0 ? (
         <div className="h-64 flex items-center justify-center">
           <div className="w-8 h-8 border-4 border-[var(--accent)] border-t-transparent rounded-full animate-spin"></div>
         </div>
       ) : (
-        <div className="bg-white rounded-3xl shadow-xl border border-black/5 overflow-hidden">
+        <div className="bg-white rounded-[2.5rem] shadow-xl border border-black/5 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
@@ -101,7 +125,7 @@ export const MovementsPage = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-sm">
-                {movements.map((mov) => {
+                {filteredMovements.length > 0 ? filteredMovements.map((mov) => {
                   const product = products.find(p => p.id === mov.productId);
                   return (
                     <tr key={mov.id} className="hover:bg-slate-50 transition-colors">
@@ -130,14 +154,18 @@ export const MovementsPage = () => {
                       </td>
                     </tr>
                   );
-                })}
+                }) : (
+                  <tr>
+                    <td colSpan="5" className="p-12 text-center text-slate-400 italic font-medium">No se encontraron movimientos para "{searchTerm}"</td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
         </div>
       )}
 
-      {/* Modal - Improved Centering & Blur excluding Sidebar */}
+      {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-[var(--bg-sidebar)]/60 backdrop-blur-md flex items-center justify-center z-50 p-4 pl-72 sm:p-6 transition-all duration-500">
           <div className="bg-white p-10 rounded-[2.5rem] shadow-2xl w-full max-w-md animate-slide-in relative overflow-hidden border border-white/20">

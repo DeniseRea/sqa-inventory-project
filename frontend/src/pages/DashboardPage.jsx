@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { AdminTemplate } from "../components/templates/AdminTemplate";
 import { productService } from "../services/productService";
 import { categoryService } from "../services/categoryService";
@@ -6,6 +7,7 @@ import { stockService } from "../services/stockService";
 
 export const DashboardPage = () => {
   const username = localStorage.getItem("username") || "Administrador";
+  const navigate = useNavigate();
   const [stats, setStats] = useState({ categories: 0, products: 0, movements: 0 });
   const [loading, setLoading] = useState(true);
 
@@ -25,9 +27,9 @@ export const DashboardPage = () => {
   }, []);
 
   const cards = [
-    { title: "Categorías", value: stats.categories, label: "Secciones", icon: "M7 7h.01M7 11h.01M7 15h.01M11 7h8M11 11h8M11 15h8" },
-    { title: "Productos", value: stats.products, label: "Artículos", icon: "M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" },
-    { title: "Movimientos", value: stats.movements, label: "Registros", icon: "M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" }
+    { title: "Categorías", value: stats.categories, label: "Secciones", icon: "M7 7h.01M7 11h.01M7 15h.01M11 7h8M11 11h8M11 15h8", path: "/categories" },
+    { title: "Productos", value: stats.products, label: "Artículos", icon: "M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4", path: "/products" },
+    { title: "Movimientos", value: stats.movements, label: "Registros", icon: "M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4", path: "/movements" }
   ];
 
   return (
@@ -50,7 +52,11 @@ export const DashboardPage = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
           {cards.map((card, idx) => (
-            <div key={idx} className="bg-[var(--bg-card)] p-8 rounded-3xl shadow-xl border border-white/5 relative overflow-hidden group">
+            <div 
+              key={idx} 
+              onClick={() => navigate(card.path)}
+              className="bg-[var(--bg-card)] p-8 rounded-3xl shadow-xl border border-white/5 relative overflow-hidden group cursor-pointer hover:scale-[1.02] transition-all duration-300"
+            >
               <div className="flex items-start justify-between mb-6">
                 <div className="p-3 bg-white/10 text-[var(--text-light)] rounded-xl group-hover:bg-[var(--accent)] transition-colors">
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -76,11 +82,17 @@ export const DashboardPage = () => {
             Acciones Rápidas
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <button className="p-5 bg-white hover:bg-[var(--accent)] hover:text-white rounded-2xl transition-all shadow-sm border border-black/5 text-left group">
+            <button 
+              onClick={() => navigate("/products")}
+              className="p-5 bg-white hover:bg-[var(--accent)] hover:text-white rounded-2xl transition-all shadow-sm border border-black/5 text-left group"
+            >
               <span className="block font-bold text-sm mb-1 uppercase tracking-tight">Nuevo Producto</span>
               <span className="block text-[10px] opacity-60 font-bold uppercase">Añadir al catálogo</span>
             </button>
-            <button className="p-5 bg-white hover:bg-[var(--accent)] hover:text-white rounded-2xl transition-all shadow-sm border border-black/5 text-left group">
+            <button 
+              onClick={() => navigate("/movements")}
+              className="p-5 bg-white hover:bg-[var(--accent)] hover:text-white rounded-2xl transition-all shadow-sm border border-black/5 text-left group"
+            >
               <span className="block font-bold text-sm mb-1 uppercase tracking-tight">Bitácora</span>
               <span className="block text-[10px] opacity-60 font-bold uppercase">Ver movimientos</span>
             </button>
