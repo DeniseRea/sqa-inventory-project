@@ -1,0 +1,9 @@
+services:
+  postgres:
+    image: 'postgres:latest'
+    environment:
+      - 'POSTGRES_DB=dongato_db'
+      - 'POSTGRES_PASSWORD=dongato123'
+      - 'POSTGRES_USER=dongato_user'
+    ports:
+      - '5432:5432'
