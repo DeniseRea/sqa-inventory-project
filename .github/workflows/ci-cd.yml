@@ -48,6 +48,10 @@ jobs:
             echo "ERROR: SONAR_MAX_ATTEMPTS must be a positive integer, got '${MAX_ATTEMPTS}'"
             exit 1
           fi
+          if ! [[ "${RETRY_DELAY_SECONDS}" =~ ^[1-9][0-9]*$ ]]; then
+            echo "ERROR: SONAR_RETRY_DELAY_SECONDS must be a positive integer, got '${RETRY_DELAY_SECONDS}'"
+            exit 1
+          fi
           for ((attempt=1; attempt<=MAX_ATTEMPTS; attempt++)); do
             mvn -B \
               org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
@@ -56,11 +60,20 @@ jobs:
               -Dsonar.host.url=https://sonarcloud.io \
               -Dsonar.coverage.jacoco.xmlReportPaths="${JACOCO_REPORT_PATH}" \
               -Dsonar.ws.timeout=300 \
-              -DskipDocker=true && break
+              -DskipDocker=true 2>&1 | tee /tmp/sonar-scan.log
+            sonar_exit_code=${PIPESTATUS[0]}
+            if [ "${sonar_exit_code}" -eq 0 ]; then
+              break
+            fi
+
+            if ! grep -Eq "Error 5[0-9]{2}|timed out|timeout" /tmp/sonar-scan.log; then
+              echo "ERROR: Sonar analysis failed with a non-transient error; skipping retry."
+              exit "${sonar_exit_code}"
+            fi
 
             if [ "${attempt}" -eq "${MAX_ATTEMPTS}" ]; then
               echo "ERROR: Sonar analysis failed after ${MAX_ATTEMPTS} attempts"
-              exit 1
+              exit "${sonar_exit_code}"
             fi
             echo "Sonar analysis failed (attempt ${attempt}), retrying in ${RETRY_DELAY_SECONDS}s..."
             sleep "${RETRY_DELAY_SECONDS}"
