@@ -14,11 +14,15 @@ class QualityServiceTest {
     @DisplayName("Should delegate to QualityScoringEngine and return report")
     void shouldReturnQualityReport() {
         QualityReport report = qualityService.getQualityStatus(88.0, 1, 2, 0);
+        QualityReport expected = QualityScoringEngine.calculateReport(88.0, 1, 2, 0);
 
         assertNotNull(report);
         assertEquals(88.0, report.coverage());
         assertEquals(1, report.bugs());
         assertEquals(2, report.smells());
         assertEquals(0, report.vulnerabilities());
+        assertEquals(expected.score(), report.score());
+        assertEquals(expected.status(), report.status());
+        assertEquals(expected.recommendations(), report.recommendations());
     }
 }
