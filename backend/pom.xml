@@ -17,6 +17,8 @@
 	<properties>
 		<java.version>17</java.version>
 		<jjwt.version>0.12.6</jjwt.version>
+		<sonar.coverage.exclusions>com/dongato/inventory/domain/model/**,com/dongato/inventory/DonGatoInventoryApplication.class,com/dongato/inventory/infrastructure/adapters/out/persistence/entity/**,**/dto/**</sonar.coverage.exclusions>
+		<sonar.coverage.jacoco.xmlReportPaths>target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
 	</properties>
 
 	<dependencies>

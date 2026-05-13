@@ -66,6 +66,7 @@ La aplicación web estará disponible en `http://localhost:5173`.
 Este proyecto implementa un marco de SQA riguroso basado en los **Factores de Calidad de McCall**, garantizando que el software no solo funcione, sino que sea confiable, eficiente y seguro.
 
 *   **Cobertura de Código**: >91% validado mediante **JaCoCo**.
+*   **Alineación de Cobertura Sonar/JaCoCo**: Las exclusiones de cobertura de SonarQube (`sonar.coverage.exclusions`) deben mantenerse sincronizadas con las exclusiones de JaCoCo para evitar discrepancias en el porcentaje reportado.
 *   **Pruebas de Rendimiento**: Validación de latencia <200ms para 50 usuarios concurrentes con **Apache JMeter**.
 *   **Auditoría de Seguridad**: Análisis continuo de dependencias con **OWASP Dependency-Check**.
 *   **Integridad de Negocio**: Suite completa de pruebas unitarias y de integración con **JUnit 5** y **Mockito**.
