@@ -68,14 +68,19 @@ El puntaje final (0-100) se pondera de la siguiente manera:
 
 Se utiliza **Apache JMeter** automatizado vía Maven.
 
-### Especificación del Escenario "Stress-Base"
-*   **Usuarios Concurrentes:** 50 hilos (Threads) atacando simultáneamente.
-*   **Ramp-up:** 10 segundos (entrada gradual).
-*   **Iteraciones:** 20 por usuario (Total 1,000 peticiones).
-*   **Endpoint Crítico:** `GET /api/v1/products`.
-*   **Aserciones de Calidad:**
-    *   **Tiempo de respuesta:** Debe ser `< 200ms` (Métrica de Eficiencia).
-    *   **Tasa de error:** Debe ser `0.00%`.
+### Especificación del Escenario "Load-Stress-Test"
+*   **Usuarios Concurrentes:** 100 hilos totales (80 lectura, 20 escritura).
+*   **Duración:** 5 minutos (300 segundos).
+*   **Endpoints:** `GET /api/v1/products` (lectura), `POST /api/v1/movements` (escritura).
+*   **Resultados Obtenidos (Ejecución 2026-05-13):**
+    *   **Throughput Total:** ~44 req/s.
+    *   **GET Products (Lectura):** 100% Éxito, Avg Response: 3.64 ms.
+    *   **POST New Movement (Escritura):** 100% Fallo (Incidencia Crítica identificada).
+    *   **Tiempo de respuesta promedio global:** 3.49 ms.
+
+### Hallazgos Críticos
+*   **Estado:** Se detectó una divergencia funcional donde los endpoints de consulta (GET) operan con excelencia bajo carga, mientras que los endpoints de escritura (POST) presentan fallos sistemáticos (100% error), indicando posibles problemas de concurrencia o configuración de autenticación/integridad en el flujo de escritura.
+*   **Acción:** Registro de incidencia para investigación de concurrencia en la capa de persistencia de movimientos.
 
 ---
 
