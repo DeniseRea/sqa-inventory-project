@@ -1,5 +1,8 @@
 package com.sqa_inventory.tasks.sqa;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Motor de cálculo de calidad basado en el Modelo de McCall.
  * Evalúa Factores de Operación, Revisión e Integridad.
@@ -13,9 +16,10 @@ public class QualityScoringEngine {
     private static final double WEIGHT_INTEGRITY = 0.2;     // Integridad (Seguridad)
 
     private static final double MIN_ACCEPTABLE_SCORE = 80.0;
+    private static final double MIN_ACCEPTABLE_COVERAGE = 85.0;
 
     /**
-     * Calcula el puntaje de calidad y genera un reporte detallado.
+     * Calcula el puntaje de calidad y genera un reporte detallado con recomendaciones (PDCA - ACT).
      */
     public static QualityReport calculateReport(double coverage, int bugs, int smells, int vulnerabilities) {
         double testabilityScore = Math.clamp(coverage, 0.0, 100.0);
@@ -29,6 +33,8 @@ public class QualityScoringEngine {
                             (integrityScore * WEIGHT_INTEGRITY);
 
         String status = (finalScore >= MIN_ACCEPTABLE_SCORE) ? "PASSED" : "FAILED";
+        
+        List<String> recommendations = generateRecommendations(coverage, bugs, smells, vulnerabilities);
 
         return new QualityReport(
             testabilityScore,
@@ -36,7 +42,31 @@ public class QualityScoringEngine {
             smells,
             vulnerabilities,
             finalScore,
-            status
+            status,
+            recommendations
         );
+    }
+
+    private static List<String> generateRecommendations(double coverage, int bugs, int smells, int vulnerabilities) {
+        List<String> recommendations = new ArrayList<>();
+
+        if (vulnerabilities > 0) {
+            recommendations.add("CRITICAL: Update dependencies and fix CVEs immediately (Integrity).");
+        }
+        if (bugs > 0) {
+            recommendations.add("HIGH: Prioritize fixing functional defects to improve Correctness.");
+        }
+        if (coverage < MIN_ACCEPTABLE_COVERAGE) {
+            recommendations.add("MEDIUM: Increase unit test coverage to reach at least 85% (Testability).");
+        }
+        if (smells > 10) {
+            recommendations.add("LOW: Schedule a refactoring sprint to reduce technical debt (Maintainability).");
+        }
+
+        if (recommendations.isEmpty()) {
+            recommendations.add("Quality standards met. Continue with continuous monitoring.");
+        }
+
+        return recommendations;
     }
 }
