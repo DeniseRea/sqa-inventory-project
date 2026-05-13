@@ -12,7 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * REST Controller for Category management.
@@ -38,7 +37,7 @@ public class CategoryController {
     public ResponseEntity<List<CategoryResponseDTO>> findAll() {
         List<CategoryResponseDTO> categories = categoryUseCase.findAll().stream()
                 .map(CategoryRestMapper::toResponseDto)
-                .collect(Collectors.toList());
+                .toList();
         return ResponseEntity.ok(categories);
     }
 

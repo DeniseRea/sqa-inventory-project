@@ -12,7 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * REST Controller for Stock Movement management.
@@ -40,7 +39,7 @@ public class StockMovementController {
     public ResponseEntity<List<StockMovementResponseDTO>> findAll() {
         List<StockMovementResponseDTO> movements = stockMovementUseCase.findAll().stream()
                 .map(StockMovementRestMapper::toResponseDto)
-                .collect(Collectors.toList());
+                .toList();
         return ResponseEntity.ok(movements);
     }
 
@@ -50,7 +49,7 @@ public class StockMovementController {
         List<StockMovementResponseDTO> movements = stockMovementUseCase.findByProductId(productId)
                 .stream()
                 .map(StockMovementRestMapper::toResponseDto)
-                .collect(Collectors.toList());
+                .toList();
         return ResponseEntity.ok(movements);
     }
 }

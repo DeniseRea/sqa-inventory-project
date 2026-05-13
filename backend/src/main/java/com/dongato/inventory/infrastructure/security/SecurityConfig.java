@@ -41,7 +41,7 @@ public class SecurityConfig {
     private String userPassword;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) {
         http
                 .csrf(csrf -> csrf.disable()) // Stateless API — CSRF not needed
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -86,7 +86,7 @@ public class SecurityConfig {
 
     @Bean
     public AuthenticationManager authenticationManager(
-            AuthenticationConfiguration authConfig) throws Exception {
+            AuthenticationConfiguration authConfig) {
         return authConfig.getAuthenticationManager();
     }
 

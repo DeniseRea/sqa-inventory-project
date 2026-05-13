@@ -82,7 +82,7 @@ class ProductUseCaseTest {
         when(categoryRepository.existsById(1L)).thenReturn(true);
         when(productRepository.save(any(Product.class))).thenReturn(saved);
 
-        Product result = productUseCase.create(input);
+        productUseCase.create(input);
 
         assertEquals(0, input.getStock()); // defaulted before save
         verify(productRepository).save(any(Product.class));

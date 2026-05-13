@@ -14,7 +14,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * REST Controller for Product management.
@@ -40,7 +39,7 @@ public class ProductController {
     public ResponseEntity<List<ProductResponseDTO>> findAll() {
         List<ProductResponseDTO> products = productUseCase.findAll().stream()
                 .map(ProductRestMapper::toResponseDto)
-                .collect(Collectors.toList());
+                .toList();
         return ResponseEntity.ok(products);
     }
 
@@ -54,7 +53,7 @@ public class ProductController {
     public ResponseEntity<List<ProductResponseDTO>> findByCategory(@PathVariable Long categoryId) {
         List<ProductResponseDTO> products = productUseCase.findByCategoryId(categoryId).stream()
                 .map(ProductRestMapper::toResponseDto)
-                .collect(Collectors.toList());
+                .toList();
         return ResponseEntity.ok(products);
     }
 
@@ -62,7 +61,7 @@ public class ProductController {
     public ResponseEntity<List<ProductResponseDTO>> findByStatus(@PathVariable ProductStatus status) {
         List<ProductResponseDTO> products = productUseCase.findByStatus(status).stream()
                 .map(ProductRestMapper::toResponseDto)
-                .collect(Collectors.toList());
+                .toList();
         return ResponseEntity.ok(products);
     }
 
@@ -70,7 +69,7 @@ public class ProductController {
     public ResponseEntity<List<ProductResponseDTO>> searchByName(@RequestParam String name) {
         List<ProductResponseDTO> products = productUseCase.searchByName(name).stream()
                 .map(ProductRestMapper::toResponseDto)
-                .collect(Collectors.toList());
+                .toList();
         return ResponseEntity.ok(products);
     }
 
