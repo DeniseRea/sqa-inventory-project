@@ -17,6 +17,7 @@
 \usepackage{titlesec}
 \usepackage{fancyhdr}
 \usepackage{hyperref}
+\usepackage{graphicx}
 \usepackage{caption}
 \usepackage{amsmath}
 \usepackage{float}
@@ -61,6 +62,7 @@
 \newcolumntype{Y}{>{\raggedright\arraybackslash}X}
 \captionsetup{font=small,labelfont=bf,skip=4pt}
 \arrayrulecolor{coffeeButton!45}
+\graphicspath{{capturas/}}
 
 % -----------------------------------------------------------------------------
 % Encabezados y estilo editorial para secciones mayores.
@@ -123,28 +125,17 @@
     anchor=center
   ] (card) at ([yshift=-.65cm]current page.center) {};
 
-  % Emblema Don Gato dibujado en TikZ.
+  % Emblema Don Gato tomado del frontend.
   \begin{scope}[shift={([yshift=8.35cm]card.center)}]
-    \fill[coffeeInk] (0,0) circle (1.18);
-    \fill[coffeePanelLight] (0,0) circle (1.02);
-    \draw[coffeeInk,line width=1.1pt] (0,0) circle (1.02);
-    \fill[coffeeInk] (-.45,.05) -- (-.88,.72) -- (-.72,-.05) -- cycle;
-    \fill[coffeeInk] (.45,.05) -- (.88,.72) -- (.72,-.05) -- cycle;
-    \fill[coffeeInk] (0,-.10) ellipse (.68 and .56);
-    \fill[coffeePanelLight] (-.25,.05) circle (.08);
-    \fill[coffeePanelLight] (.25,.05) circle (.08);
-    \fill[coffeePanelLight] (0,-.14) circle (.055);
-    \draw[coffeePanelLight,line width=.35pt] (-.05,-.20) -- (-.18,-.32);
-    \draw[coffeePanelLight,line width=.35pt] (.05,-.20) -- (.18,-.32);
-    \draw[coffeePanelLight,line width=.35pt] (-.10,-.08) -- (-.70,.10);
-    \draw[coffeePanelLight,line width=.35pt] (-.10,-.15) -- (-.70,-.10);
-    \draw[coffeePanelLight,line width=.35pt] (.10,-.08) -- (.70,.10);
-    \draw[coffeePanelLight,line width=.35pt] (.10,-.15) -- (.70,-.10);
-    \draw[coffeeButton,line width=2.2pt] (-.45,-.66) .. controls (-.12,-.92) and (.12,-.92) .. (.45,-.66);
-    \fill[coffeeButton] (-.18,-.78) circle (.14);
-    \fill[coffeeButton] (.18,-.78) circle (.14);
-    \draw[coffeeInk,line width=.7pt] (-.72,.78) .. controls (-.28,1.14) and (.28,1.14) .. (.72,.78);
-    \draw[coffeeInk,line width=.7pt] (-.50,.94) .. controls (-.18,1.23) and (.18,1.23) .. (.50,.94);
+    \fill[coffeeInk] (0,0) circle (1.25);
+    \fill[coffeePanelLight] (0,0) circle (1.14);
+    \begin{scope}
+      \clip (0,0) circle (1.03);
+      \node at (0,0) {\includegraphics[width=2.14cm,height=2.14cm]{portada-gato-don-gato.png}};
+    \end{scope}
+    \draw[coffeeInk,line width=1.05pt] (0,0) circle (1.04);
+    \draw[coffeeButton,line width=1.35pt] (0,0) circle (1.24);
+    \draw[coffeePanelLight,line width=.5pt,opacity=.8] (0,0) circle (1.11);
   \end{scope}
 
   \node[font=\bfseries\Huge,text=coffeeInk,align=center] at ([yshift=6.25cm]card.center) {Informe Final};
@@ -366,23 +357,24 @@ La matriz PDCA documenta el seguimiento del proceso, mientras que los reportes g
 \toprule
 Indicador & Matriz PDCA & Evidencia usada en informe & Lectura\\
 \midrule
-Cobertura & 91.5\% & JaCoCo local: 90.77\% en lineas y 92\% en instrucciones. & Cumple el umbral.\\
+Cobertura & 91.5\% & JaCoCo local: 90.77\% en lineas y 92\% en instrucciones; SonarCloud: 83.5\% en \textit{overall code}. & Cumple en JaCoCo; SonarCloud aprueba el Quality Gate.\\
 Latencia & 185 ms & Plan JMeter orientado a validar respuestas menores a 200 ms. & Registro compatible.\\
-Vulnerabilidades & 0 criticas & OWASP Dependency Check configurado como gate. & Requiere reporte.\\
-Pipeline & CI/CD operativo & Flujo DevSecOps documentado para GitHub Actions. & Requiere captura o enlace.\\
+Vulnerabilidades & 0 criticas & SonarCloud reporta Security Rating A; OWASP Dependency Check queda configurado como gate. & Sin issues de seguridad abiertos en SonarCloud.\\
+Pipeline & CI/CD operativo & GitHub Actions registra 35 corridas de workflow y ejecuciones recientes exitosas. & Captura disponible.\\
+SonarCloud & 23 issues iniciales & Resultado final: 0 open issues, 0.0\% duplicacion y Quality Gate aprobado. & Mejora verificada.\\
 Avance PDCA & 100\% por etapa & Informe cerrado con resultados y acciones de mejora. & Coherente.\\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-La diferencia entre 91.5\% y 90.77\% no modifica la conclusion, ya que ambos valores superan el umbral definido de 85\%. Para el calculo del Quality Score se utiliza 90.77\%, por ser el dato exacto disponible en el reporte JaCoCo local.
+La diferencia entre 91.5\%, 90.77\% y 83.5\% no representa una contradiccion: corresponden a fuentes y alcances distintos. La matriz PDCA registra el seguimiento del equipo, JaCoCo mide la cobertura local del backend y SonarCloud calcula cobertura sobre \textit{overall code} con sus propias reglas de analisis. Para el calculo del Quality Score se utiliza 90.77\%, por ser el dato exacto disponible en el reporte JaCoCo local; para mantenibilidad se usa el estado final de SonarCloud con 0 open issues.
 
 % -----------------------------------------------------------------------------
 \section{Resultados}
 
 \subsection{Metricas de Calidad Obtenidas}
 
-La evidencia local fue generada el 13 de mayo de 2026 mediante la ejecucion de pruebas del backend. Los reportes de Surefire y JaCoCo indican que el proyecto cumple el umbral de cobertura establecido y no presenta fallos funcionales en la bateria automatizada disponible.
+La evidencia local fue generada el 13 de mayo de 2026 mediante la ejecucion de pruebas del backend. Los reportes de Surefire y JaCoCo indican que el proyecto cumple el umbral de cobertura establecido y no presenta fallos funcionales en la bateria automatizada disponible. Las capturas incorporadas despues de la mejora muestran tambien el estado de SonarCloud y GitHub Actions como evidencia visual del proceso DevSecOps.
 
 \begin{table}[H]
 \centering
@@ -413,9 +405,14 @@ Cobertura JaCoCo & Clases & 90.63\%\\
 Indicador & Resultado\\
 \midrule
 Defectos en pruebas & No se registraron fallos ni errores en la ejecucion automatizada local.\\
-Vulnerabilidades criticas & El umbral definido es 0 criticas; OWASP Dependency Check queda configurado para el ciclo \texttt{verify}.\\
+SonarCloud Quality Gate & Estado \textit{Passed}; todas las condiciones del gate fueron aprobadas.\\
+SonarCloud Open Issues & 0 issues abiertos en el analisis final; inicialmente existian 23 hallazgos de mantenibilidad.\\
+SonarCloud Coverage & 83.5\% sobre \textit{overall code}; se reporta como lectura externa distinta de JaCoCo local.\\
+SonarCloud Duplications & 0.0\% de duplicacion.\\
+Vulnerabilidades criticas & El umbral definido es 0 criticas; SonarCloud muestra Security Rating A y OWASP Dependency Check queda configurado para el ciclo \texttt{verify}.\\
 Endpoints activos & 17 endpoints REST versionados bajo \texttt{/api/v1}.\\
 Seguridad & JWT para operaciones protegidas; consultas publicas controladas para productos y categorias.\\
+Pipeline GitHub Actions & 35 corridas de workflow registradas y ejecuciones recientes en estado exitoso.\\
 Rendimiento & La matriz registra 185 ms y el plan JMeter mantiene el objetivo menor a 200 ms.\\
 \bottomrule
 \end{tabularx}
@@ -423,7 +420,7 @@ Rendimiento & La matriz registra 185 ms y el plan JMeter mantiene el objetivo me
 
 \subsection{Quality Score Calculado}
 
-El Quality Scoring Engine pondera cuatro factores de McCall: Testability, Correctness, Maintainability e Integrity. El calculo usa cobertura de lineas como medida de testabilidad, resultados de pruebas como medida de correctitud, el escenario de code smells como referencia de mantenibilidad y el criterio de cero vulnerabilidades criticas como integridad.
+El Quality Scoring Engine pondera cuatro factores de McCall: Testability, Correctness, Maintainability e Integrity. El calculo usa cobertura de lineas como medida de testabilidad, resultados de pruebas como medida de correctitud, los issues abiertos de SonarCloud como referencia de mantenibilidad y el criterio de cero vulnerabilidades criticas como integridad.
 
 \[
 Score = (Testability \times 0.30) + (Correctness \times 0.30) + (Maintainability \times 0.20) + (Integrity \times 0.20)
@@ -439,15 +436,15 @@ Factor & Valor & Peso & Aporte\\
 \midrule
 Testability & 90.77 & 0.30 & 27.23\\
 Correctness & 100.00 & 0.30 & 30.00\\
-Maintainability & 76.00 & 0.20 & 15.20\\
+Maintainability & 100.00 & 0.20 & 20.00\\
 Integrity & 100.00 & 0.20 & 20.00\\
 \midrule
-\textbf{Total} & & & \textbf{92.43 / 100}\\
+\textbf{Total} & & & \textbf{97.23 / 100}\\
 \bottomrule
 \end{tabular}
 \end{table}
 
-El resultado de 92.43/100 ubica al MVP en un nivel alto para el alcance academico del proyecto. La mejora principal no esta en la ejecucion de pruebas, que ya es estable, sino en aumentar cobertura de ramas, ejecutar el ciclo completo \texttt{mvnw verify} en CI y adjuntar evidencias visuales de pipeline, OWASP, JMeter y SonarQube cuando esten disponibles.
+El resultado de 97.23/100 ubica al MVP en un nivel alto para el alcance academico del proyecto. La mejora respecto al calculo anterior se explica por la correccion de hallazgos de mantenibilidad en SonarCloud, que paso de 23 issues abiertos a 0. Las mejoras pendientes se concentran en aumentar cobertura de ramas y publicar artefactos finales de OWASP y JMeter dentro del pipeline.
 
 \subsection{Evidencias de Ejecucion}
 
@@ -463,6 +460,9 @@ Fuente & Resultado registrado & Factor McCall\\
 \midrule
 Surefire / Maven Test & 146 pruebas ejecutadas, sin fallos, errores ni casos omitidos. & Testability, Reliability\\
 JaCoCo & Cobertura de lineas de 90.77\% y cobertura de instrucciones de 92\%. & Testability\\
+SonarCloud inicial & 23 issues de mantenibilidad, con 19 de severidad media y 4 de severidad baja. & Maintainability\\
+SonarCloud final & Quality Gate aprobado, 0 open issues, 0.0\% duplicacion, 83.5\% de cobertura overall code y Security Rating A. & Maintainability, Integrity\\
+GitHub Actions & Workflow DevSecOps con 35 corridas registradas y ejecuciones recientes exitosas. & Portability, Reliability\\
 Spring Security & Separacion entre rutas publicas y rutas protegidas con JWT. & Integrity\\
 Matriz PDCA & Avance de 100\% en Planificar, Hacer, Verificar y Actuar. & Maintainability\\
 JMeter & Registro de latencia de 185 ms en la matriz de seguimiento. & Efficiency\\
@@ -471,7 +471,24 @@ OWASP Dep. Check & Control configurado para validar cero vulnerabilidades critic
 \end{tabularx}
 \end{table}
 
-La evidencia de pipeline se mantiene como parte del flujo DevSecOps propuesto. Para convertirla en evidencia final de ejecucion se requiere adjuntar una captura o enlace de GitHub Actions donde conste la corrida exitosa del build, pruebas, cobertura y analisis de seguridad.
+\begin{figure}[H]
+\centering
+\includegraphics[width=.94\textwidth]{captura_sonarqube_quality_gate.png}
+\caption{SonarCloud final: Quality Gate aprobado, 0 open issues, 0.0\% de duplicacion, 83.5\% de cobertura \textit{overall code} y Security Rating A.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=.94\textwidth]{captura_pipeline_github_actions.png}
+\caption{GitHub Actions: historial del workflow Don Gato Inventory - DevSecOps Pipeline con corridas recientes exitosas.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=.49\textwidth]{captura_sonarqube_before.jpeg}\hfill
+\includegraphics[width=.49\textwidth]{captura_sonarqube_issues_before.jpeg}
+\caption{Estado inicial en SonarCloud: 23 issues de mantenibilidad, 19 de severidad media y 4 de severidad baja.}
+\end{figure}
 
 % -----------------------------------------------------------------------------
 \section{Discusion}
@@ -499,9 +516,9 @@ Portability & Facilita reproduccion del entorno en otros equipos. & Maven Wrappe
 
 \subsection{Limitaciones Encontradas}
 
-Aunque el MVP cumple el objetivo academico, existen limitaciones que deben considerarse en una evolucion posterior. La cobertura de ramas es menor que la cobertura de lineas, por lo que conviene fortalecer pruebas sobre caminos alternos, errores de validacion y excepciones de seguridad. Ademas, OWASP y JMeter estan incorporados como parte del flujo de calidad, pero el informe final debe respaldarlos con ejecuciones completas del ciclo \texttt{verify} y sus reportes asociados.
+Aunque el MVP cumple el objetivo academico, existen limitaciones que deben considerarse en una evolucion posterior. La cobertura de ramas es menor que la cobertura de lineas, por lo que conviene fortalecer pruebas sobre caminos alternos, errores de validacion y excepciones de seguridad. Ademas, OWASP y JMeter estan incorporados como parte del flujo de calidad, pero aun deben publicarse como artefactos finales del pipeline si se exige evidencia visual independiente.
 
-Otra limitacion es que el dashboard SonarQube requiere integracion real con token y servidor o SonarCloud. Sin esa corrida, los valores asociados a quality gate deben tratarse como seguimiento academico o evidencia pendiente, no como resultado automatizado definitivo. Finalmente, el MVP todavia no incluye paginacion avanzada, roles finos por perfil ni documentacion OpenAPI generada automaticamente.
+Otra limitacion es que SonarCloud y JaCoCo no reportan exactamente el mismo porcentaje de cobertura porque miden alcances distintos. Por esta razon, el informe separa la cobertura local de JaCoCo, usada para el Quality Score, de la cobertura \textit{overall code} presentada en SonarCloud. Finalmente, el MVP todavia no incluye paginacion avanzada, roles finos por perfil ni documentacion OpenAPI generada automaticamente.
 
 \subsection{Decisiones Arquitectonicas}
 
@@ -541,7 +558,7 @@ El Modelo de McCall resulto util para explicar por que se tomaron determinadas d
 
 \subsection{Recomendaciones para Escalar el Framework}
 
-Para fortalecer el proyecto se recomienda integrar SonarCloud o SonarQube real en GitHub Actions, ejecutar \texttt{mvnw verify} como gate obligatorio antes de cada merge, publicar artifacts de JaCoCo, OWASP y JMeter en cada corrida de CI, e incorporar OpenAPI/Swagger como documentacion viva de endpoints.
+Para fortalecer el proyecto se recomienda consolidar SonarCloud dentro de GitHub Actions como gate obligatorio, ejecutar \texttt{mvnw verify} antes de cada merge, publicar artifacts de JaCoCo, OWASP y JMeter en cada corrida de CI, e incorporar OpenAPI/Swagger como documentacion viva de endpoints.
 
 Tambien se recomienda implementar roles y permisos mas finos para administrador, cajero y consulta; introducir Testcontainers para validar persistencia con PostgreSQL real; y extender el Quality Scoring Engine para leer reportes generados automaticamente, evitando calculos manuales.
 
