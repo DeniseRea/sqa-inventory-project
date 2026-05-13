@@ -42,7 +42,7 @@ class QualityScoringEngineTest {
     }
 
     @Test
-    @DisplayName("Debe lanzar excepción si la cobertura está fuera de rango")
+    @DisplayName("Should throw when coverage is out of range")
     void shouldThrowWhenCoverageOutOfRange() {
         assertThrows(IllegalArgumentException.class,
                 () -> QualityScoringEngine.calculateScore(-1.0, 0, 0, 0));
@@ -51,7 +51,7 @@ class QualityScoringEngineTest {
     }
 
     @Test
-    @DisplayName("Debe lanzar excepción si las métricas son negativas")
+    @DisplayName("Should throw when metrics are negative")
     void shouldThrowWhenNegativeMetrics() {
         assertThrows(IllegalArgumentException.class,
                 () -> QualityScoringEngine.calculateScore(90.0, -1, 0, 0));
@@ -62,7 +62,7 @@ class QualityScoringEngineTest {
     }
 
     @Test
-    @DisplayName("Debe generar recomendaciones para métricas críticas")
+    @DisplayName("Should generate recommendations for critical metrics")
     void shouldGenerateRecommendationsForIssues() {
         QualityReport report = QualityScoringEngine.calculateReport(70.0, 1, 12, 1);
 
@@ -73,7 +73,7 @@ class QualityScoringEngineTest {
     }
 
     @Test
-    @DisplayName("Debe devolver recomendación positiva cuando no hay hallazgos")
+    @DisplayName("Should return positive recommendation when no findings")
     void shouldReturnPositiveRecommendationWhenNoFindings() {
         QualityReport report = QualityScoringEngine.calculateReport(95.0, 0, 0, 0);
 
@@ -83,7 +83,7 @@ class QualityScoringEngineTest {
     }
 
     @Test
-    @DisplayName("Debe asignar grado correcto según el puntaje")
+    @DisplayName("Should return correct grade for score")
     void shouldReturnCorrectGrade() {
         assertEquals("A (Excellent)", QualityScoringEngine.getGrade(95.0));
         assertEquals("B (Good)", QualityScoringEngine.getGrade(85.0));
