@@ -436,27 +436,5 @@
 				}
 			]
 		}
-	],
-	"variable": [
-		{
-			"key": "base_url",
-			"value": "http://localhost:8080",
-			"type": "string"
-		},
-		{
-			"key": "jwt_token",
-			"value": "",
-			"type": "string"
-		},
-		{
-			"key": "category_id",
-			"value": "",
-			"type": "string"
-		},
-		{
-			"key": "product_id",
-			"value": "",
-			"type": "string"
-		}
 	]
 }
