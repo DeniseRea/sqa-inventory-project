@@ -32,12 +32,52 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          mvn -B test \
-            org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
-            -Dsonar.projectKey=DeniseRea_sqa-inventory-project \
-            -Dsonar.organization=deniserea \
-            -Dsonar.host.url=https://sonarcloud.io \
-            -DskipDocker=true
+          mvn -B test -DskipDocker=true
+
+          JACOCO_REPORT_PATH="${SONAR_JACOCO_REPORT_PATH:-target/site/jacoco/jacoco.xml}"
+          if [ ! -f "${JACOCO_REPORT_PATH}" ] || [ ! -s "${JACOCO_REPORT_PATH}" ]; then
+            echo "ERROR: JaCoCo report not found or empty at ${JACOCO_REPORT_PATH}"
+            ls -la "$(dirname "${JACOCO_REPORT_PATH}")" || true
+            exit 1
+          fi
+          echo "JaCoCo report ready at ${JACOCO_REPORT_PATH}"
+
+          MAX_ATTEMPTS="${SONAR_MAX_ATTEMPTS:-2}"
+          RETRY_DELAY_SECONDS="${SONAR_RETRY_DELAY_SECONDS:-20}"
+          if ! [[ "${MAX_ATTEMPTS}" =~ ^[1-9][0-9]*$ ]]; then
+            echo "ERROR: SONAR_MAX_ATTEMPTS must be a positive integer, got '${MAX_ATTEMPTS}'"
+            exit 1
+          fi
+          if ! [[ "${RETRY_DELAY_SECONDS}" =~ ^[1-9][0-9]*$ ]]; then
+            echo "ERROR: SONAR_RETRY_DELAY_SECONDS must be a positive integer, got '${RETRY_DELAY_SECONDS}'"
+            exit 1
+          fi
+          for ((attempt=1; attempt<=MAX_ATTEMPTS; attempt++)); do
+            mvn -B \
+              org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+              -Dsonar.projectKey=DeniseRea_sqa-inventory-project \
+              -Dsonar.organization=deniserea \
+              -Dsonar.host.url=https://sonarcloud.io \
+              -Dsonar.coverage.jacoco.xmlReportPaths="${JACOCO_REPORT_PATH}" \
+              -Dsonar.ws.timeout=300 \
+              -DskipDocker=true 2>&1 | tee /tmp/sonar-scan.log
+            sonar_exit_code=${PIPESTATUS[0]}
+            if [ "${sonar_exit_code}" -eq 0 ]; then
+              break
+            fi
+
+            if ! grep -Eq "Error 5[0-9]{2}|timed out|timeout" /tmp/sonar-scan.log; then
+              echo "ERROR: Sonar analysis failed with a non-transient error; skipping retry."
+              exit "${sonar_exit_code}"
+            fi
+
+            if [ "${attempt}" -eq "${MAX_ATTEMPTS}" ]; then
+              echo "ERROR: Sonar analysis failed after ${MAX_ATTEMPTS} attempts"
+              exit "${sonar_exit_code}"
+            fi
+            echo "Sonar analysis failed (attempt ${attempt}), retrying in ${RETRY_DELAY_SECONDS}s..."
+            sleep "${RETRY_DELAY_SECONDS}"
+          done
 
       - name: Upload Coverage Report
         uses: actions/upload-artifact@v4
