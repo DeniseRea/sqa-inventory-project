@@ -10,6 +10,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.validation.BeanPropertyBindingResult;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.core.MethodParameter;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -106,5 +110,28 @@ class GlobalExceptionHandlerTest {
 
         assertFalse(response.getBody().getMessage().contains("NullPointerException"));
         assertFalse(response.getBody().getMessage().contains("secret internal detail"));
+    }
+
+    @Test
+    @DisplayName("Should return 400 with field errors for validation exceptions")
+    void shouldReturnValidationErrors() throws NoSuchMethodException {
+        BeanPropertyBindingResult bindingResult =
+                new BeanPropertyBindingResult(new Object(), "request");
+        bindingResult.addError(new FieldError("request", "name", "Name is required"));
+
+        MethodParameter methodParameter = new MethodParameter(
+                GlobalExceptionHandlerTest.class.getDeclaredMethod("dummyMethod", Object.class), 0);
+        MethodArgumentNotValidException ex = new MethodArgumentNotValidException(methodParameter, bindingResult);
+
+        ResponseEntity<ApiErrorDTO> response = handler.handleValidation(ex, mockRequest);
+
+        assertEquals(HttpStatus.BAD_REQUEST.value(), response.getStatusCode().value());
+        assertNotNull(response.getBody());
+        assertEquals("Validation Failed", response.getBody().getError());
+        assertEquals(1, response.getBody().getFieldErrors().size());
+        assertEquals("name", response.getBody().getFieldErrors().get(0).getField());
+    }
+
+    private void dummyMethod(Object request) {
     }
 }

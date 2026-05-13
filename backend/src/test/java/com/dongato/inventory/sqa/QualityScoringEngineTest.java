@@ -40,4 +40,55 @@ class QualityScoringEngineTest {
         // Score: (100*0.3) + (50*0.3) + (100*0.2) + (100*0.2) = 30 + 15 + 20 + 20 = 85
         assertEquals(85.0, report.score());
     }
+
+    @Test
+    @DisplayName("Debe lanzar excepción si la cobertura está fuera de rango")
+    void shouldThrowWhenCoverageOutOfRange() {
+        assertThrows(IllegalArgumentException.class,
+                () -> QualityScoringEngine.calculateScore(-1.0, 0, 0, 0));
+        assertThrows(IllegalArgumentException.class,
+                () -> QualityScoringEngine.calculateScore(101.0, 0, 0, 0));
+    }
+
+    @Test
+    @DisplayName("Debe lanzar excepción si las métricas son negativas")
+    void shouldThrowWhenNegativeMetrics() {
+        assertThrows(IllegalArgumentException.class,
+                () -> QualityScoringEngine.calculateScore(90.0, -1, 0, 0));
+        assertThrows(IllegalArgumentException.class,
+                () -> QualityScoringEngine.calculateScore(90.0, 0, -2, 0));
+        assertThrows(IllegalArgumentException.class,
+                () -> QualityScoringEngine.calculateScore(90.0, 0, 0, -3));
+    }
+
+    @Test
+    @DisplayName("Debe generar recomendaciones para métricas críticas")
+    void shouldGenerateRecommendationsForIssues() {
+        QualityReport report = QualityScoringEngine.calculateReport(70.0, 1, 12, 1);
+
+        assertTrue(report.recommendations().stream().anyMatch(rec -> rec.contains("CRITICAL")));
+        assertTrue(report.recommendations().stream().anyMatch(rec -> rec.contains("HIGH")));
+        assertTrue(report.recommendations().stream().anyMatch(rec -> rec.contains("MEDIUM")));
+        assertTrue(report.recommendations().stream().anyMatch(rec -> rec.contains("LOW")));
+    }
+
+    @Test
+    @DisplayName("Debe devolver recomendación positiva cuando no hay hallazgos")
+    void shouldReturnPositiveRecommendationWhenNoFindings() {
+        QualityReport report = QualityScoringEngine.calculateReport(95.0, 0, 0, 0);
+
+        assertEquals(1, report.recommendations().size());
+        assertEquals("Quality standards met. Continue with continuous monitoring.",
+                report.recommendations().get(0));
+    }
+
+    @Test
+    @DisplayName("Debe asignar grado correcto según el puntaje")
+    void shouldReturnCorrectGrade() {
+        assertEquals("A (Excellent)", QualityScoringEngine.getGrade(95.0));
+        assertEquals("B (Good)", QualityScoringEngine.getGrade(85.0));
+        assertEquals("C (Acceptable)", QualityScoringEngine.getGrade(75.0));
+        assertEquals("D (Needs Improvement)", QualityScoringEngine.getGrade(65.0));
+        assertEquals("F (Critical)", QualityScoringEngine.getGrade(50.0));
+    }
 }
