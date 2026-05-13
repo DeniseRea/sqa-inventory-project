@@ -87,12 +87,10 @@ class JwtTokenProviderTest {
     }
 
     @Test
-    @DisplayName("Should expire token generated with 1ms expiration")
-    void shouldExpireTokenWithShortExpiration() throws InterruptedException {
-        JwtTokenProvider shortLived = new JwtTokenProvider(SECRET, 1L);
+    @DisplayName("Should return false for token generated with past expiration")
+    void shouldExpireTokenWithPastExpiration() {
+        JwtTokenProvider shortLived = new JwtTokenProvider(SECRET, -1L);
         String token = shortLived.generateToken("admin");
-
-        Thread.sleep(10);
 
         assertFalse(shortLived.validateToken(token));
     }

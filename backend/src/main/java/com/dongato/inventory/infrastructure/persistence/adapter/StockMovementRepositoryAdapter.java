@@ -8,7 +8,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Adapter that implements StockMovementRepositoryPort using Spring Data JPA.
@@ -32,13 +31,13 @@ public class StockMovementRepositoryAdapter implements StockMovementRepositoryPo
     public List<StockMovement> findByProductId(Long productId) {
         return jpaRepository.findByProductIdOrderByCreatedAtDesc(productId).stream()
                 .map(StockMovementPersistenceMapper::toDomain)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
     public List<StockMovement> findAll() {
         return jpaRepository.findAll().stream()
                 .map(StockMovementPersistenceMapper::toDomain)
-                .collect(Collectors.toList());
+                .toList();
     }
 }

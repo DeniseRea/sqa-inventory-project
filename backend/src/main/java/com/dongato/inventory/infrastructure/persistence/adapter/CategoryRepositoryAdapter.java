@@ -9,7 +9,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * Adapter that implements CategoryRepositoryPort using Spring Data JPA.
@@ -39,7 +38,7 @@ public class CategoryRepositoryAdapter implements CategoryRepositoryPort {
     public List<Category> findAll() {
         return jpaRepository.findAll().stream()
                 .map(CategoryPersistenceMapper::toDomain)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override

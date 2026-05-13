@@ -1,7 +1,6 @@
 package com.dongato.inventory.interfaces.rest.exception;
 
 import com.dongato.inventory.domain.exception.BusinessRuleException;
-import com.dongato.inventory.domain.exception.InsufficientStockException;
 import com.dongato.inventory.domain.exception.ResourceNotFoundException;
 import com.dongato.inventory.interfaces.rest.dto.ApiErrorDTO;
 import jakarta.servlet.http.HttpServletRequest;
