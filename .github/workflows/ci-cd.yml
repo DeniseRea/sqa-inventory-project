@@ -35,16 +35,20 @@ jobs:
           mvn -B test -DskipDocker=true
 
           JACOCO_REPORT_PATH="${SONAR_JACOCO_REPORT_PATH:-target/site/jacoco/jacoco.xml}"
-          if [ ! -s "${JACOCO_REPORT_PATH}" ]; then
+          if [ ! -f "${JACOCO_REPORT_PATH}" ] || [ ! -s "${JACOCO_REPORT_PATH}" ]; then
             echo "ERROR: JaCoCo report not found or empty at ${JACOCO_REPORT_PATH}"
-            ls -la target/site || true
+            ls -la "$(dirname "${JACOCO_REPORT_PATH}")" || true
             exit 1
           fi
           echo "JaCoCo report ready at ${JACOCO_REPORT_PATH}"
 
           MAX_ATTEMPTS="${SONAR_MAX_ATTEMPTS:-2}"
           RETRY_DELAY_SECONDS="${SONAR_RETRY_DELAY_SECONDS:-20}"
-          for attempt in $(seq 1 "${MAX_ATTEMPTS}"); do
+          if ! [[ "${MAX_ATTEMPTS}" =~ ^[1-9][0-9]*$ ]]; then
+            echo "ERROR: SONAR_MAX_ATTEMPTS must be a positive integer, got '${MAX_ATTEMPTS}'"
+            exit 1
+          fi
+          for ((attempt=1; attempt<=MAX_ATTEMPTS; attempt++)); do
             mvn -B \
               org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
               -Dsonar.projectKey=DeniseRea_sqa-inventory-project \
