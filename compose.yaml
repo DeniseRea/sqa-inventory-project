@@ -18,7 +18,7 @@ services:
     restart: unless-stopped
 
   app:
-    build: .
+    build: ./backend
     container_name: dongato-app
     ports:
       - '8080:8080'
@@ -29,6 +29,17 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    restart: unless-stopped
+
+  frontend:
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: dongato-frontend
+    ports:
+      - '80:80'
+    depends_on:
+      - app
     restart: unless-stopped
 
 volumes:
