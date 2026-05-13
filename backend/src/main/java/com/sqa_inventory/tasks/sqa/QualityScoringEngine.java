@@ -18,6 +18,10 @@ public class QualityScoringEngine {
     private static final double MIN_ACCEPTABLE_SCORE = 80.0;
     private static final double MIN_ACCEPTABLE_COVERAGE = 85.0;
 
+    private QualityScoringEngine() {
+        throw new IllegalStateException("Utility class");
+    }
+
     /**
      * Calcula el puntaje de calidad y genera un reporte detallado con recomendaciones (PDCA - ACT).
      */
