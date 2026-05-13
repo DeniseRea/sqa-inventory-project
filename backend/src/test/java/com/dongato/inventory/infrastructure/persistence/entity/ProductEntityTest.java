@@ -23,7 +23,7 @@ class ProductEntityTest {
     @Test
     @DisplayName("Should keep existing createdAt on persist")
     void shouldKeepExistingCreatedAtOnPersist() {
-        LocalDateTime now = LocalDateTime.now().minusHours(2);
+        LocalDateTime now = LocalDateTime.of(2025, 2, 1, 9, 30);
         ProductEntity entity = new ProductEntity();
         entity.setCreatedAt(now);
 

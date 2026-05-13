@@ -23,7 +23,7 @@ class StockMovementEntityTest {
     @Test
     @DisplayName("Should keep existing createdAt on persist")
     void shouldKeepExistingCreatedAtOnPersist() {
-        LocalDateTime now = LocalDateTime.now().minusMinutes(30);
+        LocalDateTime now = LocalDateTime.of(2025, 3, 15, 8, 45);
         StockMovementEntity entity = new StockMovementEntity();
         entity.setCreatedAt(now);
 
