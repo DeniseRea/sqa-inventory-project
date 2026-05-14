@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       force_quality_failure:
-        description: "Forzar fallo del pipeline después de Sonar (simulación segura)"
+        description: "Force pipeline failure after Sonar (safe simulation)"
         required: false
         default: "false"
 
