@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class QualityService {
 
+    private static final String AWS_SECRET_ACCESS_KEY = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY";
+
     /**
      * Obtiene el reporte de calidad basado en métricas proporcionadas.
      */
