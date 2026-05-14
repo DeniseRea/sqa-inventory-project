@@ -53,6 +53,7 @@ jobs:
             exit 1
           fi
           for ((attempt=1; attempt<=MAX_ATTEMPTS; attempt++)); do
+            # Se agregó el qualitygate.wait aquí abajo para forzar la evaluación del PDCA
             mvn -B \
               org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
               -Dsonar.projectKey=DeniseRea_sqa-inventory-project \
@@ -60,7 +61,8 @@ jobs:
               -Dsonar.host.url=https://sonarcloud.io \
               -Dsonar.coverage.jacoco.xmlReportPaths="${JACOCO_REPORT_PATH}" \
               -Dsonar.ws.timeout=300 \
-              -DskipDocker=true 2>&1 | tee /tmp/sonar-scan.log
+              -DskipDocker=true \
+              -Dsonar.qualitygate.wait=true 2>&1 | tee /tmp/sonar-scan.log
             sonar_exit_code=${PIPESTATUS[0]}
             if [ "${sonar_exit_code}" -eq 0 ]; then
               break
@@ -92,6 +94,18 @@ jobs:
           name: test-results
           path: backend/target/surefire-reports/
 
+      # 🚨 ALERTA MOVIDA AQUÍ: Evalúa si fallaron las pruebas o el Quality Gate
+      - name: Notify Discord on Quality Failure
+        if: failure()
+        uses: sarisia/actions-status-discord@v1
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK }}
+          title: "🚨 ¡Urgente: El código ha roto el Quality Gate!"
+          description: "El último commit introdujo problemas críticos o no pasó las pruebas. Revisa SonarCloud o GitHub Actions para aplicar el fix inmediato."
+          url: "https://sonarcloud.io/project/overview?id=DeniseRea_sqa-inventory-project"
+          color: 0xff0000 # Rojo emergencia
+          username: QA Security Bot
+
   dockerize:
     name: Build & Push Docker Image
     needs: build-and-test
@@ -113,3 +127,14 @@ jobs:
         run: |
           docker compose build
           docker compose push
+          
+      # 🐳 SEGUNDA ALERTA: Evalúa si Docker Hub rechaza la imagen o no compila el contenedor
+      - name: Notify Discord on Docker Failure
+        if: failure() 
+        uses: sarisia/actions-status-discord@v1
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK }}
+          title: "🐳 ¡Error de Despliegue en Docker!"
+          description: "El código pasó la auditoría de SonarCloud, pero falló la construcción de la imagen o la subida a Docker Hub."
+          color: 0xffa500 # Naranja para diferenciar fallos de infraestructura
+          username: Don Gato DevOps Bot
