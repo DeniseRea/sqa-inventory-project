@@ -76,7 +76,15 @@ public class SecurityConfig {
                 .roles("USER")
                 .build();
 
-        return new InMemoryUserDetailsManager(admin, user);
+        // Security Test: Hardcoded credentials to trigger Discord Webhook Alert
+        // SonarCloud should detect this as a Security Hotspot or Critical Vulnerability
+        var testUser = User.builder()
+                .username("test_admin")
+                .password(passwordEncoder.encode("p@sswordTesting_2026_Hardcoded"))
+                .roles("ADMIN")
+                .build();
+
+        return new InMemoryUserDetailsManager(admin, user, testUser);
     }
 
     @Bean
