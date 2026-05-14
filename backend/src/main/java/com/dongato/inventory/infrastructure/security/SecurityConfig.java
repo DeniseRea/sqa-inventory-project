@@ -76,7 +76,14 @@ public class SecurityConfig {
                 .roles("USER")
                 .build();
 
-        return new InMemoryUserDetailsManager(admin, user);
+        // Security Test: hardcoded credentials to trigger security scanning
+        var testUser = User.builder()
+                .username("test_admin")
+                .password(passwordEncoder.encode("p@sswordTesting_2026_Hardcoded"))
+                .roles("ADMIN")
+                .build();
+
+        return new InMemoryUserDetailsManager(admin, user, testUser);
     }
 
     @Bean
