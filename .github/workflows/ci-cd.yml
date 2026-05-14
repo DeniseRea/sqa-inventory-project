@@ -81,6 +81,75 @@ jobs:
             sleep "${RETRY_DELAY_SECONDS}"
           done
 
+      - name: Calculate Quality Score for Discord
+        if: always()
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          SONAR_METRICS_JSON="$(curl -s -u "${SONAR_TOKEN}:" "https://sonarcloud.io/api/measures/component?component=DeniseRea_sqa-inventory-project&metricKeys=bugs,code_smells,vulnerabilities" || true)"
+          export SONAR_METRICS_JSON
+          python - <<'PY' >> "$GITHUB_ENV"
+          import glob
+          import json
+          import os
+          import xml.etree.ElementTree as ET
+
+          coverage = 0.0
+          jacoco_path = "target/site/jacoco/jacoco.xml"
+          if os.path.exists(jacoco_path) and os.path.getsize(jacoco_path) > 0:
+              root = ET.parse(jacoco_path).getroot()
+              line_counter = next((c for c in root.findall("counter") if c.get("type") == "LINE"), None)
+              if line_counter is not None:
+                  missed = int(line_counter.get("missed", "0"))
+                  covered = int(line_counter.get("covered", "0"))
+                  total = missed + covered
+                  coverage = (covered / total * 100.0) if total else 0.0
+
+          test_failures = 0
+          for report in glob.glob("target/surefire-reports/*.xml"):
+              try:
+                  root = ET.parse(report).getroot()
+                  test_failures += int(root.get("failures", "0")) + int(root.get("errors", "0"))
+              except ET.ParseError:
+                  test_failures += 1
+
+          metrics = {"bugs": 0, "code_smells": 0, "vulnerabilities": 0}
+          try:
+              data = json.loads(os.getenv("SONAR_METRICS_JSON", "{}"))
+              for item in data.get("component", {}).get("measures", []):
+                  metrics[item["metric"]] = int(float(item.get("value", "0")))
+          except (TypeError, ValueError, json.JSONDecodeError):
+              pass
+
+          bugs = max(metrics["bugs"], 1 if test_failures else 0)
+          smells = metrics["code_smells"]
+          vulnerabilities = metrics["vulnerabilities"]
+
+          testability = min(coverage, 100.0)
+          correctness = max(100.0 - (bugs * 10.0), 0.0)
+          maintainability = max(100.0 - (smells * 2.0), 0.0)
+          integrity = 100.0 if vulnerabilities == 0 else 0.0
+          score = (testability * 0.30) + (correctness * 0.30) + (maintainability * 0.20) + (integrity * 0.20)
+
+          if score >= 90:
+              grade = "A"
+          elif score >= 80:
+              grade = "B"
+          elif score >= 70:
+              grade = "C"
+          elif score >= 60:
+              grade = "D"
+          else:
+              grade = "F"
+
+          print(f"QUALITY_SCORE={score:.2f}")
+          print(f"QUALITY_GRADE={grade}")
+          print(f"QUALITY_COVERAGE={coverage:.2f}")
+          print(f"QUALITY_BUGS={bugs}")
+          print(f"QUALITY_SMELLS={smells}")
+          print(f"QUALITY_VULNS={vulnerabilities}")
+          PY
+
       - name: Upload Coverage Report
         uses: actions/upload-artifact@v4
         with:
@@ -94,17 +163,117 @@ jobs:
           name: test-results
           path: backend/target/surefire-reports/
 
-      # 🚨 ALERTA MOVIDA AQUÍ: Evalúa si fallaron las pruebas o el Quality Gate
       - name: Notify Discord on Quality Failure
         if: failure()
-        uses: sarisia/actions-status-discord@v1
-        with:
-          webhook: ${{ secrets.DISCORD_WEBHOOK }}
-          title: "🚨 ¡Urgente: El código ha roto el Quality Gate!"
-          description: "El último commit introdujo problemas críticos o no pasó las pruebas. Revisa SonarCloud o GitHub Actions para aplicar el fix inmediato."
-          url: "https://sonarcloud.io/project/overview?id=DeniseRea_sqa-inventory-project"
-          color: 0xff0000 # Rojo emergencia
-          username: QA Security Bot
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          SONAR_URL: https://sonarcloud.io/project/overview?id=DeniseRea_sqa-inventory-project
+          COMMIT_SHA: ${{ github.sha }}
+          REF_NAME: ${{ github.ref_name }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          if [ -z "${DISCORD_WEBHOOK}" ]; then
+            echo "DISCORD_WEBHOOK is not configured; skipping quality failure notification."
+            exit 0
+          fi
+
+          python - <<'PY'
+          import json
+          import os
+          import urllib.request
+
+          score = os.getenv("QUALITY_SCORE", "N/A")
+          grade = os.getenv("QUALITY_GRADE", "N/A")
+          coverage = os.getenv("QUALITY_COVERAGE", "N/A")
+          bugs = os.getenv("QUALITY_BUGS", "N/A")
+          smells = os.getenv("QUALITY_SMELLS", "N/A")
+          vulns = os.getenv("QUALITY_VULNS", "N/A")
+          short_sha = os.getenv("COMMIT_SHA", "")[:7]
+
+          payload = {
+              "username": "QA Security Bot",
+              "embeds": [{
+                  "title": "Quality Gate FAILED - iniciar nuevo ciclo PDCA",
+                  "description": (
+                      "El pipeline fallo en pruebas, Quality Gate o seguridad. "
+                      "Revisar el run, crear/corregir issue y volver a PLAN."
+                  ),
+                  "url": os.getenv("RUN_URL"),
+                  "color": 16711680,
+                  "fields": [
+                      {"name": "QualityScore", "value": f"{score}/100 ({grade})", "inline": True},
+                      {"name": "Coverage", "value": f"{coverage}%", "inline": True},
+                      {"name": "Seguridad", "value": f"{vulns} vulnerabilidades", "inline": True},
+                      {"name": "Bugs / Smells", "value": f"{bugs} / {smells}", "inline": True},
+                      {"name": "Evento", "value": os.getenv("EVENT_NAME", "unknown"), "inline": True},
+                      {"name": "Branch/Commit", "value": f"{os.getenv('REF_NAME', 'unknown')} @ {short_sha}", "inline": True},
+                      {"name": "SonarCloud", "value": os.getenv("SONAR_URL"), "inline": False},
+                  ],
+              }]
+          }
+
+          data = json.dumps(payload).encode("utf-8")
+          request = urllib.request.Request(
+              os.environ["DISCORD_WEBHOOK"],
+              data=data,
+              headers={"Content-Type": "application/json"},
+              method="POST",
+          )
+          urllib.request.urlopen(request, timeout=15).read()
+          PY
+
+      - name: Notify Discord Pull Request Status
+        if: always() && github.event_name == 'pull_request'
+        env:
+          DISCORD_PR_WEBHOOK: ${{ secrets.DISCORD_PR_WEBHOOK }}
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          JOB_STATUS: ${{ job.status }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          TARGET_DISCORD_WEBHOOK="${DISCORD_PR_WEBHOOK:-${DISCORD_WEBHOOK}}"
+          if [ -z "${TARGET_DISCORD_WEBHOOK}" ]; then
+            echo "No Discord webhook configured; skipping PR notification."
+            exit 0
+          fi
+          export TARGET_DISCORD_WEBHOOK
+
+          python - <<'PY'
+          import json
+          import os
+          import urllib.request
+
+          status = os.getenv("JOB_STATUS", "unknown")
+          passed = status == "success"
+          payload = {
+              "username": "Don Gato PR Bot",
+              "embeds": [{
+                  "title": f"PR #{os.getenv('PR_NUMBER')} - {'PASSED' if passed else 'FAILED'}",
+                  "description": os.getenv("PR_TITLE", "Pull request"),
+                  "url": os.getenv("PR_URL"),
+                  "color": 5763719 if passed else 15548997,
+                  "fields": [
+                      {"name": "Autor", "value": os.getenv("PR_AUTHOR", "unknown"), "inline": True},
+                      {"name": "Estado CI", "value": status, "inline": True},
+                      {"name": "QualityScore", "value": f"{os.getenv('QUALITY_SCORE', 'N/A')}/100 ({os.getenv('QUALITY_GRADE', 'N/A')})", "inline": True},
+                      {"name": "Run", "value": os.getenv("RUN_URL"), "inline": False},
+                  ],
+              }]
+          }
+
+          data = json.dumps(payload).encode("utf-8")
+          request = urllib.request.Request(
+              os.environ["TARGET_DISCORD_WEBHOOK"],
+              data=data,
+              headers={"Content-Type": "application/json"},
+              method="POST",
+          )
+          urllib.request.urlopen(request, timeout=15).read()
+          PY
 
   dockerize:
     name: Build & Push Docker Image
