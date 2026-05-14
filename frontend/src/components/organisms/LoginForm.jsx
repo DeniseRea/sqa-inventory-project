@@ -38,7 +38,7 @@ export const LoginForm = ({ onSubmit }) => {
           className="text-sm opacity-80 text-center"
           style={{ color: "var(--color-bg-secondary)" }}
         >
-          Ingresa tus credenciales
+          Ingresa tus credenciales Pe
         </p>
       </div>
       <FormField
