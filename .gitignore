@@ -47,9 +47,11 @@ Thumbs.db
 *.fls
 *.listing
 *.lof
-*.log
 *.lot
 *.out
 *.synctex.gz
 *.toc
 *.xdv
+
+# Project documentation
+docs/
