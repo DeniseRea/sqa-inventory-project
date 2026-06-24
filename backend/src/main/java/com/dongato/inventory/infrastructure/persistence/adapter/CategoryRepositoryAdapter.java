@@ -55,4 +55,33 @@ public class CategoryRepositoryAdapter implements CategoryRepositoryPort {
     public void deleteById(Long id) {
         jpaRepository.deleteById(id);
     }
+
+    public Category findByName(String name) {
+        var entity = jpaRepository.findByNameIgnoreCase(name);
+        if (entity == null) {
+            return null;
+        }
+        return CategoryPersistenceMapper.toDomain(entity);
+    }
+
+    public List<Category> findAllOrderedByName() {
+        return jpaRepository.findAllByOrderByNameAsc().stream()
+                .map(CategoryPersistenceMapper::toDomain)
+                .toList();
+    }
+
+    public long count() {
+        return jpaRepository.count();
+    }
+
+    public Category saveAndFlush(Category category) {
+        var entity = CategoryPersistenceMapper.toEntity(category);
+        var saved = jpaRepository.saveAndFlush(entity);
+        return CategoryPersistenceMapper.toDomain(saved);
+    }
+
+    public void delete(Category category) {
+        var entity = CategoryPersistenceMapper.toEntity(category);
+        jpaRepository.delete(entity);
+    }
 }

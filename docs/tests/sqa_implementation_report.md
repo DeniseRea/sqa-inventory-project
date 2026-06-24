@@ -58,6 +58,20 @@ Para asegurar que los tests de JMeter se puedan ejecutar en local sin intervenci
 
 ---
 
+## 4. Pruebas de Integración y E2E (Postman)
+
+Se desarrolló una colección en **Postman** para validar el flujo completo del sistema desde una perspectiva externa.
+
+### Propósito SQA
+Garantizar que la integración entre la capa de seguridad (JWT), los controladores REST y la persistencia de datos funcione correctamente en escenarios de uso real.
+
+### Implementación
+- **Flujo E2E:** Login -> Creación de Categoría -> Creación de Producto -> Movimientos de Stock (Entrada/Salida) -> Validación de Saldo Final.
+- **Validaciones:** Scripts automatizados en cada petición para verificar códigos de estado, estructura JSON y reglas de negocio (ej. impedir ventas sin stock suficiente).
+- **Variables de Entorno:** Uso de entornos dinámicos para pasar IDs y tokens entre peticiones, permitiendo una ejecución "one-click" de la suite completa.
+
+---
+
 ## 5. Documentación Adicional Detallada
 
 Para una revisión granular de cada caso de prueba, escenarios validados y configuración técnica específica de cada herramienta, consulte el siguiente documento:

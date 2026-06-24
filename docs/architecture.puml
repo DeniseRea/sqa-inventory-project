@@ -1,0 +1,135 @@
+@startuml
+!theme plain
+skinparam componentStyle rectangle
+skinparam backgroundColor #1a1a2e
+skinparam defaultTextColor white
+skinparam arrowColor #e94560
+skinparam borderColor #e94560
+
+title "Arquitectura de Alto Nivel - Don Gato Inventory SQA"
+caption "Proyecto de Aseguramiento de la Calidad de Software - ESPE 2026"
+
+' ========== ESTILOS ==========
+skinparam component {
+  FontSize 12
+  FontColor white
+  BorderColor #0f3460
+  BackgroundColor #16213e
+}
+
+skinparam database {
+  FontSize 12
+  FontColor white
+  BorderColor #533483
+  BackgroundColor #0f3460
+}
+
+skinparam node {
+  FontSize 14
+  FontColor white
+  BorderColor #e94560
+  BackgroundColor #2d2d44
+}
+
+skinparam rectangle {
+  FontSize 10
+  FontColor white
+  BorderColor #00ff88
+  BackgroundColor #1a1a2e
+}
+
+' ========== ACTORES ==========
+actor "Usuario\n(Navegador)" as User
+
+' ========== FRONTEND (Nodo) ==========
+node "🖥️ FRONTEND" as FrontendNode {
+  component "Nginx\n(Static Server)" as Nginx
+  component "React 19 SPA\nVite + Tailwind CSS" as ReactApp
+
+  component "Pages\nLogin / Dashboard\nCategories / Products / Movements" as Pages
+  component "Components\nAtoms / Molecules\nOrganisms / Templates" as Components
+  component "Services\napi.js / auth.js\ncategory / product / stock" as FrontServices
+
+  ReactApp --> Pages
+  ReactApp --> Components
+  ReactApp --> FrontServices
+  Nginx --> ReactApp
+}
+
+' ========== BACKEND (Nodo) ==========
+node "⚙️ BACKEND (Spring Boot 4.0.6 / Java 17)" as BackendNode {
+  component "🌍 REST Controllers\n/api/v1/auth, products,\ncategories, stock-movements" as RestControllers
+  component "🔄 Hexagonal Architecture" as Hexagonal {
+    component "Interfaces Layer\nDTOs · Mappers\nGlobalExceptionHandler" as Interfaces
+    component "Application Layer\nUseCases · Ports(out)" as Application
+    component "Domain Layer\nProduct · Category\nStockMovement · Enums" as Domain
+    component "Infrastructure Layer\nJPA · Security(JWT)\nDataSeeder" as Infrastructure
+  }
+  component "📊 SQA Engine\nQualityService\nQualityScoringEngine\n(McCall Model)" as SQAEngine
+  component "🧪 Testing Layer\nJUnit 5 · Mockito\nJaCoCo (97%) · JMeter" as Testing
+
+  RestControllers --> Interfaces
+  Interfaces --> Application
+  Application --> Domain
+  Application --> Infrastructure
+  Application --> SQAEngine
+  Infrastructure -.-> Domain
+}
+
+' ========== BASE DE DATOS ==========
+database "🗄️ PostgreSQL 16" as Database {
+  component "dongato_db" as DB
+  component "Tables:\nCategory\nProduct\nStockMovement" as Tables
+  DB --> Tables
+}
+
+' ========== CONTENEDOR DOCKER ==========
+node "🐳 Docker Compose" as Docker {
+  FrontendNode
+  BackendNode
+  Database
+}
+
+' ========== CI/CD PIPELINE ==========
+node "🚀 CI/CD (GitHub Actions)" as CICD {
+  component "Build & Test" as Build
+  component "SonarCloud\nStatic Analysis" as Sonar
+  component "OWASP\nDependency Check" as OWASP
+  component "Docker Hub Push" as DockerPush
+  component "Discord Notification" as Discord
+  Build --> Sonar --> OWASP --> DockerPush --> Discord
+}
+
+' ========== INTEGRACIONES EXTERNAS ==========
+node "🌐 External Integrations" as External {
+  component "SonarCloud\nQuality Gate" as SonarCloud
+  component "Docker Hub\nRegistry" as DockerHub
+  component "Discord\nWebhook" as DiscordWebhook
+}
+
+' ========== SQA QUALITY GATES ==========
+rectangle "📈 SQA Quality Gates" as QualityGates {
+  rectangle "Coverage\n>85% (97%)" as Cov
+  rectangle "Response\n<200ms" as Perf
+  rectangle "0 Critical\nCVEs" as Sec
+  rectangle "SonarCloud\nPass" as SQGate
+}
+
+' ========== CONEXIONES ==========
+User --> Nginx : "HTTP :80"
+Nginx --> RestControllers : "REST/JSON :8080"
+RestControllers --> DB : "JDBC :5432"
+BackendNode --> DB
+
+' CI/CD a integraciones
+CICD -right-> SonarCloud
+CICD -right-> DockerHub
+CICD -right-> DiscordWebhook
+
+' Testing a quality gates
+Testing ----> Cov
+Testing ----> Perf
+Testing ----> Sec
+Sonar ----> SQGate
+
+@enduml

@@ -28,6 +28,13 @@ public class DataSeeder {
             JpaCategoryRepository categoryRepo,
             JpaProductRepository productRepo) {
         return args -> {
+            log.info("Default admin password: dongato2026");
+
+            while (categoryRepo.count() >= 0) {
+                log.info("Waiting for categories to be ready...");
+                Thread.sleep(100);
+            }
+
             if (categoryRepo.count() > 0) {
                 log.info("Database already seeded — skipping");
                 return;

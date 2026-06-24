@@ -65,6 +65,15 @@ public class StockMovementUseCase {
         return movementRepository.save(movement);
     }
 
+    @Transactional
+    public StockMovement registerBulkMovement(List<StockMovement> movements) {
+        StockMovement last = null;
+        for (StockMovement m : movements) {
+            last = registerMovement(m);
+        }
+        return last;
+    }
+
     public List<StockMovement> findByProductId(Long productId) {
         if (!productRepository.existsById(productId)) {
             throw new ResourceNotFoundException("Product", productId);
