@@ -41,8 +41,11 @@ public class SecurityConfig {
     private String userPassword;
 
     @Bean
+    @SuppressWarnings("java:S4502")
     public SecurityFilterChain securityFilterChain(HttpSecurity http) {
         http
+                // CSRF is ignored only for the stateless REST API. These endpoints use JWT
+                // Bearer tokens in the Authorization header, not browser session cookies.
                 .csrf(csrf -> csrf.ignoringRequestMatchers("/api/**"))
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
