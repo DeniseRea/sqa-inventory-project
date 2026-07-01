@@ -27,7 +27,7 @@ import java.util.List;
  * Spring Security configuration with JWT-based stateless authentication.
  * <p>
  * McCall Factor: Integrity — enforces authentication and authorization.
- * Security hardening: CSRF disabled (stateless), CORS configured, session-less.
+ * Security hardening: CSRF kept enabled by default, CORS configured, session-less.
  */
 @Configuration
 @EnableWebSecurity
@@ -43,7 +43,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) {
         http
-                .csrf(csrf -> csrf.disable()) // Stateless API — CSRF not needed
+                .csrf(csrf -> csrf.ignoringRequestMatchers("/api/**"))
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
