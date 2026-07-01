@@ -1,7 +1,11 @@
-import { useState, useEffect, useCallback } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Edit3, Package, Plus, Search, Trash2 } from "lucide-react";
 import { AdminTemplate } from "../components/templates/AdminTemplate";
 import { productService } from "../services/productService";
 import { categoryService } from "../services/categoryService";
+import { ConfirmDialog } from "../components/ui/ConfirmDialog";
+import { Feedback, FieldError, FieldWarning } from "../components/ui/Feedback";
+import { formatCurrency, hasErrors, validateProduct } from "../utils/validation";
 
 export const ProductsPage = () => {
   const [products, setProducts] = useState([]);
@@ -10,218 +14,365 @@ export const ProductsPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
-  
-  const [formData, setFormData] = useState({ 
-    name: "", 
-    price: "", 
-    stock: 0, 
-    categoryId: ""
+  const [feedback, setFeedback] = useState(null);
+  const [productToDelete, setProductToDelete] = useState(null);
+  const [formData, setFormData] = useState({
+    name: "",
+    price: "",
+    stock: "0",
+    categoryId: "",
   });
 
   const fetchData = useCallback(async (query = "") => {
     try {
       setLoading(true);
-      const [p, c] = await Promise.all([
+      const [productsData, categoriesData] = await Promise.all([
         query ? productService.search(query) : productService.getAll(),
-        categoryService.getAll()
+        categoryService.getAll(),
       ]);
-      setProducts(p); 
-      setCategories(c);
-    } catch (e) { console.error(e); }
-    finally { setLoading(false); }
+      setProducts(productsData);
+      setCategories(categoriesData);
+    } catch {
+      setFeedback({ type: "error", message: "No se pudieron cargar los productos." });
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      fetchData(searchQuery);
+      fetchData(searchQuery.trim());
     }, 300);
     return () => clearTimeout(timer);
-  }, [searchQuery, fetchData]);
+  }, [fetchData, searchQuery]);
+
+  const validation = validateProduct({
+    ...formData,
+    includeStock: !editingProduct,
+  });
+  const isInvalid = hasErrors(validation.errors);
+
+  const categoryById = useMemo(() => {
+    return categories.reduce((acc, category) => {
+      acc[String(category.id)] = category;
+      return acc;
+    }, {});
+  }, [categories]);
 
   const handleOpenCreate = () => {
     setEditingProduct(null);
-    setFormData({ name: "", price: "", stock: 0, categoryId: "" });
+    setFormData({ name: "", price: "", stock: "0", categoryId: "" });
+    setFeedback(null);
     setIsModalOpen(true);
   };
 
   const handleOpenEdit = (product) => {
     setEditingProduct(product);
-    setFormData({ 
-      name: product.name, 
-      price: product.price, 
-      stock: product.stock, 
-      categoryId: product.categoryId 
+    setFormData({
+      name: product.name ?? "",
+      price: String(product.price ?? ""),
+      stock: String(product.stock ?? 0),
+      categoryId: String(product.categoryId ?? ""),
     });
+    setFeedback(null);
     setIsModalOpen(true);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    if (isInvalid) return;
+
     try {
-      const data = {
-        ...formData,
-        price: parseFloat(formData.price),
-        stock: parseInt(formData.stock),
-        categoryId: parseInt(formData.categoryId)
+      const payload = {
+        name: formData.name.trim(),
+        price: Number(formData.price),
+        categoryId: Number(formData.categoryId),
       };
 
       if (editingProduct) {
-        await productService.update(editingProduct.id, data);
+        await productService.update(editingProduct.id, payload);
+        setFeedback({ type: "success", message: "Producto actualizado correctamente." });
       } else {
-        await productService.create(data);
+        await productService.create({
+          ...payload,
+          stock: Number(formData.stock),
+        });
+        setFeedback({ type: "success", message: "Producto creado correctamente." });
       }
-      setIsModalOpen(false);
-      fetchData(searchQuery);
-    } catch (err) { alert("Error al procesar producto"); }
-  };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("¿Eliminar este producto?")) {
-      try {
-        await productService.delete(id);
-        fetchData(searchQuery);
-      } catch (err) { alert("Error al eliminar"); }
+      setIsModalOpen(false);
+      fetchData(searchQuery.trim());
+    } catch {
+      setFeedback({ type: "error", message: "No se pudo procesar el producto." });
     }
   };
 
+  const handleDelete = async () => {
+    if (!productToDelete) return;
+
+    try {
+      await productService.delete(productToDelete.id);
+      setFeedback({ type: "success", message: "Producto eliminado correctamente." });
+      setProductToDelete(null);
+      fetchData(searchQuery.trim());
+    } catch {
+      setFeedback({ type: "error", message: "No se pudo eliminar el producto." });
+      setProductToDelete(null);
+    }
+  };
+
+  const renderStatus = (status) => (
+    <span
+      className={`inline-flex rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-[0.12em] ${
+        status === "AVAILABLE" ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"
+      }`}
+    >
+      {status === "AVAILABLE" ? "Disponible" : "Agotado"}
+    </span>
+  );
+
   return (
     <AdminTemplate>
-      <header className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6 mb-10">
-        <div className="flex-1">
-          <div className="flex items-center gap-2 text-[var(--accent)] font-black text-[10px] uppercase tracking-widest mb-2">
-            <div className="h-0.5 w-6 bg-[var(--accent)] rounded-full"></div>
-            Catálogo
+      <header className="mb-7 grid gap-5 lg:grid-cols-[1fr_auto] lg:items-end">
+        <div>
+          <div className="mb-2 flex items-center gap-2 text-xs font-black uppercase tracking-[0.18em] text-[var(--accent)]">
+            <span className="h-1 w-8 rounded-full bg-[var(--accent)]" />
+            Catalogo
           </div>
-          <h2 className="text-3xl font-bold text-[var(--text-dark)] tracking-tight mb-4">Productos</h2>
-          
-          {/* Barra de Búsqueda (Implementación de GET /search) */}
-          <div className="relative w-full max-w-md group">
-            <svg className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[var(--accent)] transition-colors" xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-            <input 
-              type="text"
-              placeholder="Buscar por nombre..."
-              className="w-full pl-12 pr-4 py-3 bg-white border border-black/5 rounded-2xl outline-none focus:ring-2 focus:ring-[var(--accent)] shadow-sm transition-all text-sm font-medium"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
+          <h1 className="text-3xl font-black tracking-normal text-[var(--text-dark)]">Productos</h1>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--text-muted)]">
+            Administra precios, categorias y disponibilidad del inventario.
+          </p>
         </div>
-        
-        <button 
-          onClick={handleOpenCreate}
-          className="flex items-center gap-2 px-6 py-4 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-bold text-sm rounded-2xl shadow-lg transition-all whitespace-nowrap"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          Nuevo Producto
+        <button type="button" onClick={handleOpenCreate} className="btn-primary px-5 py-3 text-sm">
+          <Plus size={18} />
+          Nuevo producto
         </button>
       </header>
 
+      {feedback && (
+        <div className="mb-5">
+          <Feedback type={feedback.type} message={feedback.message} onClose={() => setFeedback(null)} />
+        </div>
+      )}
+
+      <section className="surface-panel mb-5 rounded-3xl p-4">
+        <div className="relative max-w-md">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" size={18} />
+          <input
+            type="text"
+            className="input-base py-3 pl-11 pr-4 text-sm font-semibold"
+            placeholder="Buscar por nombre..."
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+          />
+        </div>
+      </section>
+
       {loading && products.length === 0 ? (
-        <div className="h-64 flex items-center justify-center">
-          <div className="w-8 h-8 border-4 border-[var(--accent)] border-t-transparent rounded-full animate-spin"></div>
+        <div className="flex h-64 items-center justify-center">
+          <div className="h-9 w-9 animate-spin rounded-full border-4 border-[var(--accent)] border-t-transparent" />
+        </div>
+      ) : products.length === 0 ? (
+        <div className="surface-panel rounded-3xl p-10 text-center text-sm font-semibold text-[var(--text-muted)]">
+          No se encontraron productos.
         </div>
       ) : (
-        <div className="bg-white rounded-[2.5rem] shadow-xl border border-black/5 overflow-hidden">
-          <div className="overflow-x-auto">
+        <>
+          <div className="hidden overflow-hidden rounded-3xl border border-[var(--border-soft)] bg-white/90 shadow-xl lg:block">
             <table className="w-full text-left">
-              <thead>
-                <tr className="bg-[var(--bg-sidebar)] text-[var(--text-light)]">
-                  <th className="p-6 font-black uppercase tracking-widest text-[10px] opacity-40">ID</th>
-                  <th className="p-6 font-bold text-sm uppercase">Nombre</th>
-                  <th className="p-6 font-bold text-sm uppercase">Categoría</th>
-                  <th className="p-6 font-bold text-sm uppercase text-right">Precio</th>
-                  <th className="p-6 font-bold text-sm uppercase text-right">Stock</th>
-                  <th className="p-6 font-bold text-sm uppercase text-center">Estado</th>
-                  <th className="p-6 font-bold text-sm uppercase text-right">Acciones</th>
+              <thead className="bg-[var(--bg-sidebar)] text-[var(--text-light)]">
+                <tr>
+                  <th className="px-5 py-4 text-xs font-black uppercase tracking-[0.16em] text-white/48">ID</th>
+                  <th className="px-5 py-4 text-xs font-black uppercase tracking-[0.16em]">Nombre</th>
+                  <th className="px-5 py-4 text-xs font-black uppercase tracking-[0.16em]">Categoria</th>
+                  <th className="px-5 py-4 text-right text-xs font-black uppercase tracking-[0.16em]">Precio</th>
+                  <th className="px-5 py-4 text-right text-xs font-black uppercase tracking-[0.16em]">Stock</th>
+                  <th className="px-5 py-4 text-center text-xs font-black uppercase tracking-[0.16em]">Estado</th>
+                  <th className="px-5 py-4 text-right text-xs font-black uppercase tracking-[0.16em]">Acciones</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 text-sm">
-                {products.length > 0 ? products.map((prod) => {
-                  const category = categories.find(c => c.id === prod.categoryId);
+              <tbody className="divide-y divide-[var(--border-soft)]">
+                {products.map((product) => {
+                  const category = categoryById[String(product.categoryId)];
                   return (
-                    <tr key={prod.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="p-6 text-[var(--text-muted)] font-mono text-xs font-bold">#{prod.id}</td>
-                      <td className="p-6 font-bold text-[var(--text-dark)]">{prod.name}</td>
-                      <td className="p-6">
-                        <span className="px-3 py-1 bg-slate-100 text-[var(--text-dark)] rounded-full text-[10px] font-black uppercase tracking-widest border border-black/5">
-                          {category ? category.name : 'Sin Categoría'}
+                    <tr key={product.id} className="transition hover:bg-[var(--surface-soft)]/45">
+                      <td className="px-5 py-4 font-mono text-xs font-bold text-[var(--text-muted)]">#{product.id}</td>
+                      <td className="px-5 py-4 font-black">{product.name}</td>
+                      <td className="px-5 py-4">
+                        <span className="rounded-full bg-[var(--surface-soft)] px-3 py-1 text-xs font-bold text-[var(--text-muted)]">
+                          {category?.name ?? "Sin categoria"}
                         </span>
                       </td>
-                      <td className="p-6 text-right font-black text-[var(--accent)] text-lg">${prod.price.toFixed(2)}</td>
-                      <td className="p-6 text-right font-black text-xl text-slate-900">{prod.stock}</td>
-                      <td className="p-6 text-center">
-                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                          prod.status === 'AVAILABLE' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'
-                        }`}>
-                          {prod.status === 'AVAILABLE' ? 'Disponible' : 'Agotado'}
-                        </span>
+                      <td className="px-5 py-4 text-right text-base font-black text-[var(--accent)]">
+                        {formatCurrency(product.price)}
                       </td>
-                      <td className="p-6 text-right">
-                        <div className="flex justify-end gap-1">
-                          <button onClick={() => handleOpenEdit(prod)} className="p-2 hover:bg-slate-100 text-slate-400 hover:text-[var(--accent)] rounded-lg transition-all">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                            </svg>
+                      <td className="px-5 py-4 text-right text-base font-black">{product.stock}</td>
+                      <td className="px-5 py-4 text-center">{renderStatus(product.status)}</td>
+                      <td className="px-5 py-4">
+                        <div className="flex justify-end gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEdit(product)}
+                            className="rounded-xl p-2 text-[var(--text-muted)] transition hover:bg-white hover:text-[var(--accent)]"
+                            aria-label={`Editar ${product.name}`}
+                          >
+                            <Edit3 size={18} />
                           </button>
-                          <button onClick={() => handleDelete(prod.id)} className="p-2 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-lg transition-all">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
+                          <button
+                            type="button"
+                            onClick={() => setProductToDelete(product)}
+                            className="rounded-xl p-2 text-[var(--text-muted)] transition hover:bg-red-50 hover:text-red-600"
+                            aria-label={`Eliminar ${product.name}`}
+                          >
+                            <Trash2 size={18} />
                           </button>
                         </div>
                       </td>
                     </tr>
-                  )
-                }) : (
-                  <tr>
-                    <td colSpan="7" className="p-12 text-center text-slate-400 italic font-medium">No se encontraron productos...</td>
-                  </tr>
-                )}
+                  );
+                })}
               </tbody>
             </table>
           </div>
-        </div>
+
+          <div className="grid gap-4 lg:hidden">
+            {products.map((product) => {
+              const category = categoryById[String(product.categoryId)];
+              return (
+                <article key={product.id} className="surface-panel rounded-3xl p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex min-w-0 gap-3">
+                      <span className="rounded-2xl bg-[var(--bg-sidebar)] p-3 text-[var(--text-light)]">
+                        <Package size={20} />
+                      </span>
+                      <div className="min-w-0">
+                        <p className="truncate text-base font-black">{product.name}</p>
+                        <p className="text-xs font-bold text-[var(--text-muted)]">{category?.name ?? "Sin categoria"}</p>
+                      </div>
+                    </div>
+                    {renderStatus(product.status)}
+                  </div>
+                  <div className="mt-4 grid grid-cols-2 gap-3">
+                    <div className="rounded-2xl bg-white/75 p-3">
+                      <p className="text-[11px] font-black uppercase tracking-[0.12em] text-[var(--text-muted)]">Precio</p>
+                      <p className="mt-1 text-lg font-black text-[var(--accent)]">{formatCurrency(product.price)}</p>
+                    </div>
+                    <div className="rounded-2xl bg-white/75 p-3">
+                      <p className="text-[11px] font-black uppercase tracking-[0.12em] text-[var(--text-muted)]">Stock</p>
+                      <p className="mt-1 text-lg font-black">{product.stock}</p>
+                    </div>
+                  </div>
+                  <div className="mt-4 flex justify-end gap-2">
+                    <button type="button" onClick={() => handleOpenEdit(product)} className="btn-secondary px-3 py-2 text-sm">
+                      <Edit3 size={17} />
+                      Editar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setProductToDelete(product)}
+                      className="rounded-xl bg-red-50 px-3 py-2 text-sm font-bold text-red-600"
+                    >
+                      <Trash2 size={17} />
+                    </button>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </>
       )}
 
       {isModalOpen && (
-        <div className="fixed inset-0 bg-[var(--bg-sidebar)]/60 backdrop-blur-md flex items-center justify-center z-50 p-4 pl-72 sm:p-6 transition-all duration-500">
-          <div className="bg-white p-10 rounded-[2.5rem] shadow-2xl w-full max-w-md animate-slide-in relative overflow-hidden border border-white/20">
-            <div className="absolute top-0 left-0 w-full h-1.5 bg-[var(--accent)]"></div>
-            <h3 className="text-xl font-bold mb-1 text-[var(--text-dark)] uppercase tracking-tight">
-              {editingProduct ? "Editar Producto" : "Nuevo Producto"}
-            </h3>
-            <p className="text-[var(--text-muted)] text-[10px] font-bold uppercase tracking-widest mb-8">Datos del Inventario</p>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Nombre</label>
-                <input required type="text" className="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-[var(--accent)] transition-all font-bold text-sm" placeholder="Ej: Café Molido" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[var(--bg-sidebar)]/60 p-4 backdrop-blur-sm">
+          <div className="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-3xl bg-white p-6 shadow-2xl">
+            <div className="mb-6">
+              <p className="text-xs font-black uppercase tracking-[0.16em] text-[var(--accent)]">
+                {editingProduct ? "Editar" : "Nuevo"}
+              </p>
+              <h2 className="mt-1 text-2xl font-black text-[var(--text-dark)]">Producto</h2>
+              <p className="mt-1 text-sm text-[var(--text-muted)]">Los precios se registran en dolares estadounidenses.</p>
+            </div>
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div>
+                <label className="mb-1.5 block text-xs font-black uppercase tracking-[0.14em] text-[var(--text-muted)]">
+                  Nombre
+                </label>
+                <input
+                  type="text"
+                  className={`input-base px-4 py-3 text-sm font-semibold ${validation.errors.name ? "input-error" : ""}`}
+                  placeholder="Ej: Cafe americano"
+                  value={formData.name}
+                  onChange={(event) => setFormData((prev) => ({ ...prev, name: event.target.value }))}
+                />
+                <FieldError message={validation.errors.name} />
               </div>
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Categoría</label>
-                <select required className="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-[var(--accent)] transition-all font-bold text-sm" value={formData.categoryId} onChange={(e) => setFormData({...formData, categoryId: e.target.value})}>
-                  <option value="">Seleccionar...</option>
-                  {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+
+              <div>
+                <label className="mb-1.5 block text-xs font-black uppercase tracking-[0.14em] text-[var(--text-muted)]">
+                  Categoria
+                </label>
+                <select
+                  className={`input-base px-4 py-3 text-sm font-semibold ${validation.errors.categoryId ? "input-error" : ""}`}
+                  value={formData.categoryId}
+                  onChange={(event) => setFormData((prev) => ({ ...prev, categoryId: event.target.value }))}
+                >
+                  <option value="">Seleccionar categoria...</option>
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
                 </select>
+                <FieldError message={validation.errors.categoryId} />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Precio</label>
-                  <input required type="number" step="0.01" className="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-[var(--accent)] transition-all font-bold text-sm" value={formData.price} onChange={(e) => setFormData({...formData, price: e.target.value})} />
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1.5 block text-xs font-black uppercase tracking-[0.14em] text-[var(--text-muted)]">
+                    Precio unitario
+                  </label>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    min="0.01"
+                    max="999.99"
+                    step="0.01"
+                    className={`input-base px-4 py-3 text-sm font-semibold ${validation.errors.price ? "input-error" : ""}`}
+                    placeholder="0.00"
+                    value={formData.price}
+                    onChange={(event) => setFormData((prev) => ({ ...prev, price: event.target.value }))}
+                  />
+                  <FieldError message={validation.errors.price} />
+                  <FieldWarning message={validation.warnings.price} />
                 </div>
+
                 {!editingProduct && (
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Stock Inicial</label>
-                    <input required type="number" className="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-[var(--accent)] transition-all font-bold text-sm" value={formData.stock} onChange={(e) => setFormData({...formData, stock: e.target.value})} />
+                  <div>
+                    <label className="mb-1.5 block text-xs font-black uppercase tracking-[0.14em] text-[var(--text-muted)]">
+                      Stock inicial
+                    </label>
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      min="0"
+                      max="10000"
+                      step="1"
+                      className={`input-base px-4 py-3 text-sm font-semibold ${validation.errors.stock ? "input-error" : ""}`}
+                      placeholder="0"
+                      value={formData.stock}
+                      onChange={(event) => setFormData((prev) => ({ ...prev, stock: event.target.value }))}
+                    />
+                    <FieldError message={validation.errors.stock} />
                   </div>
                 )}
               </div>
-              <div className="flex gap-3 pt-4">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 p-4 text-xs font-bold uppercase text-slate-400 hover:bg-slate-50 rounded-xl transition-all">Cancelar</button>
-                <button type="submit" className="flex-1 p-4 bg-[var(--bg-sidebar)] text-white text-xs font-bold uppercase rounded-xl hover:bg-black shadow-lg transition-all">
+
+              <div className="flex gap-3 pt-2">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="btn-secondary flex-1 px-4 py-3">
+                  Cancelar
+                </button>
+                <button type="submit" disabled={isInvalid} className="btn-primary flex-1 px-4 py-3">
                   {editingProduct ? "Actualizar" : "Guardar"}
                 </button>
               </div>
@@ -229,6 +380,16 @@ export const ProductsPage = () => {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        open={Boolean(productToDelete)}
+        title="Eliminar producto"
+        message={`Esta accion eliminara "${productToDelete?.name}" del catalogo.`}
+        confirmLabel="Eliminar"
+        danger
+        onConfirm={handleDelete}
+        onCancel={() => setProductToDelete(null)}
+      />
     </AdminTemplate>
   );
 };

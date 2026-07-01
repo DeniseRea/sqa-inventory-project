@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Activity, ArrowRight, Boxes, FolderKanban, Package, RefreshCcw } from "lucide-react";
 import { AdminTemplate } from "../components/templates/AdminTemplate";
 import { productService } from "../services/productService";
 import { categoryService } from "../services/categoryService";
@@ -8,108 +9,153 @@ import { stockService } from "../services/stockService";
 export const DashboardPage = () => {
   const username = localStorage.getItem("username") || "Administrador";
   const navigate = useNavigate();
-  const [stats, setStats] = useState({ categories: 0, products: 0, movements: 0 });
+  const [stats, setStats] = useState({ categories: 0, products: 0, movements: 0, lowStock: 0 });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const [c, p, m] = await Promise.all([
+        setLoading(true);
+        const [categories, products, movements] = await Promise.all([
           categoryService.getAll(),
           productService.getAll(),
           stockService.getAll(),
         ]);
-        setStats({ categories: c.length, products: p.length, movements: m.length });
-      } catch (error) { console.error(error); }
-      finally { setLoading(false); }
+        setStats({
+          categories: categories.length,
+          products: products.length,
+          movements: movements.length,
+          lowStock: products.filter((product) => Number(product.stock) <= 5).length,
+        });
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
     };
+
     fetchStats();
   }, []);
 
-  const cards = [
-    { title: "Categorías", value: stats.categories, label: "Secciones", icon: "M7 7h.01M7 11h.01M7 15h.01M11 7h8M11 11h8M11 15h8", path: "/categories" },
-    { title: "Productos", value: stats.products, label: "Artículos", icon: "M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4", path: "/products" },
-    { title: "Movimientos", value: stats.movements, label: "Registros", icon: "M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4", path: "/movements" }
-  ];
+  const cards = useMemo(
+    () => [
+      {
+        title: "Categorias",
+        value: stats.categories,
+        label: "Secciones activas",
+        icon: FolderKanban,
+        path: "/categories",
+      },
+      {
+        title: "Productos",
+        value: stats.products,
+        label: "Articulos registrados",
+        icon: Package,
+        path: "/products",
+      },
+      {
+        title: "Movimientos",
+        value: stats.movements,
+        label: "Registros de stock",
+        icon: Activity,
+        path: "/movements",
+      },
+    ],
+    [stats],
+  );
 
   return (
     <AdminTemplate>
-      <header className="mb-10">
-        <div className="flex items-center gap-3 text-[var(--accent)] font-black text-xs uppercase tracking-[0.2em] mb-2">
-          <div className="h-1 w-8 bg-[var(--accent)] rounded-full"></div>
-          Vista General
+      <header className="mb-7 grid gap-5 lg:grid-cols-[1fr_auto] lg:items-end">
+        <div>
+          <div className="mb-2 flex items-center gap-2 text-xs font-black uppercase tracking-[0.18em] text-[var(--accent)]">
+            <span className="h-1 w-8 rounded-full bg-[var(--accent)]" />
+            Vista general
+          </div>
+          <h1 className="text-3xl font-black tracking-normal text-[var(--text-dark)] sm:text-4xl">
+            Hola, <span className="text-[var(--accent)]">{username}</span>
+          </h1>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--text-muted)]">
+            Resumen del inventario y accesos rapidos para las operaciones del dia.
+          </p>
         </div>
-        <h2 className="text-4xl font-bold text-[var(--text-dark)] tracking-tight">
-          Hola, <span className="text-[var(--accent)]">{username}</span>
-        </h2>
-        <p className="text-[var(--text-muted)] mt-1 font-medium italic">Resumen actual del inventario artesanal.</p>
+        <button type="button" onClick={() => navigate("/movements")} className="btn-primary px-5 py-3 text-sm">
+          Registrar movimiento
+          <ArrowRight size={18} />
+        </button>
       </header>
 
       {loading ? (
-        <div className="h-64 flex items-center justify-center">
-          <div className="w-10 h-10 border-4 border-[var(--accent)] border-t-transparent rounded-full animate-spin"></div>
+        <div className="flex h-64 items-center justify-center">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-[var(--accent)] border-t-transparent" />
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-          {cards.map((card, idx) => (
-            <div 
-              key={idx} 
-              onClick={() => navigate(card.path)}
-              className="bg-[var(--bg-card)] p-8 rounded-3xl shadow-xl border border-white/5 relative overflow-hidden group cursor-pointer hover:scale-[1.02] transition-all duration-300"
-            >
-              <div className="flex items-start justify-between mb-6">
-                <div className="p-3 bg-white/10 text-[var(--text-light)] rounded-xl group-hover:bg-[var(--accent)] transition-colors">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={card.icon} />
-                  </svg>
+        <div className="grid gap-5 md:grid-cols-3">
+          {cards.map((card) => {
+            const Icon = card.icon;
+            return (
+              <button
+                key={card.title}
+                type="button"
+                onClick={() => navigate(card.path)}
+                className="surface-panel group rounded-3xl p-6 text-left transition hover:-translate-y-1 hover:shadow-2xl"
+              >
+                <div className="mb-6 flex items-center justify-between">
+                  <span className="rounded-2xl bg-[var(--bg-sidebar)] p-3 text-[var(--text-light)]">
+                    <Icon size={22} />
+                  </span>
+                  <ArrowRight size={18} className="text-[var(--text-muted)] transition group-hover:text-[var(--accent)]" />
                 </div>
-                <span className="text-[var(--text-light)]/5 text-6xl font-black">{idx + 1}</span>
-              </div>
-              <h3 className="text-[var(--text-light)]/60 text-[10px] font-black uppercase tracking-widest mb-1">{card.title}</h3>
-              <div className="flex items-baseline gap-2">
-                <span className="text-4xl font-bold text-[var(--text-light)] tracking-tighter">{card.value}</span>
-                <span className="text-[var(--text-light)]/40 text-[10px] font-bold uppercase">{card.label}</span>
-              </div>
-            </div>
-          ))}
+                <p className="text-xs font-black uppercase tracking-[0.14em] text-[var(--text-muted)]">{card.title}</p>
+                <div className="mt-2 flex items-end gap-2">
+                  <span className="text-4xl font-black text-[var(--text-dark)]">{card.value}</span>
+                  <span className="pb-1 text-xs font-bold text-[var(--text-muted)]">{card.label}</span>
+                </div>
+              </button>
+            );
+          })}
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-white/50 p-8 rounded-3xl border border-white/20">
-          <h3 className="font-bold text-lg mb-6 flex items-center gap-2">
-            <div className="w-1.5 h-1.5 bg-[var(--accent)] rounded-full"></div>
-            Acciones Rápidas
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <button 
-              onClick={() => navigate("/products")}
-              className="p-5 bg-white hover:bg-[var(--accent)] hover:text-white rounded-2xl transition-all shadow-sm border border-black/5 text-left group"
-            >
-              <span className="block font-bold text-sm mb-1 uppercase tracking-tight">Nuevo Producto</span>
-              <span className="block text-[10px] opacity-60 font-bold uppercase">Añadir al catálogo</span>
+      <div className="mt-6 grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
+        <section className="surface-panel rounded-3xl p-6">
+          <div className="mb-5 flex items-center justify-between gap-4">
+            <div>
+              <h2 className="text-lg font-black">Acciones rapidas</h2>
+              <p className="text-sm text-[var(--text-muted)]">Tareas frecuentes para mantener el inventario al dia.</p>
+            </div>
+            <Boxes className="text-[var(--accent)]" size={24} />
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <button type="button" onClick={() => navigate("/products")} className="btn-secondary px-4 py-4 text-left">
+              <Package size={19} />
+              Nuevo producto
             </button>
-            <button 
-              onClick={() => navigate("/movements")}
-              className="p-5 bg-white hover:bg-[var(--accent)] hover:text-white rounded-2xl transition-all shadow-sm border border-black/5 text-left group"
-            >
-              <span className="block font-bold text-sm mb-1 uppercase tracking-tight">Bitácora</span>
-              <span className="block text-[10px] opacity-60 font-bold uppercase">Ver movimientos</span>
+            <button type="button" onClick={() => navigate("/categories")} className="btn-secondary px-4 py-4 text-left">
+              <FolderKanban size={19} />
+              Organizar categorias
             </button>
           </div>
-        </div>
+        </section>
 
-        <div className="bg-[var(--bg-sidebar)] p-10 rounded-3xl text-[var(--text-light)] relative overflow-hidden flex flex-col justify-center border-b-4 border-b-[var(--accent)]">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--accent)]/10 -mr-10 -mt-10 blur-3xl rounded-full"></div>
-          <h3 className="text-xl font-bold italic mb-2">Estado del Sistema</h3>
-          <p className="text-[var(--text-light)]/50 text-sm font-medium mb-6 leading-relaxed">
-            Todos los servicios están operando correctamente. El stock está sincronizado con la base de datos.
-          </p>
-          <div className="flex items-center gap-2 bg-white/5 w-fit px-4 py-2 rounded-full border border-white/5">
-            <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-            <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">Sistema en línea</span>
+        <section className="rounded-3xl bg-[var(--bg-sidebar)] p-6 text-[var(--text-light)] shadow-2xl">
+          <div className="mb-5 flex items-center justify-between">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.16em] text-[var(--accent)]">Estado</p>
+              <h2 className="mt-1 text-xl font-black">Sistema en linea</h2>
+            </div>
+            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/10">
+              <RefreshCcw size={21} />
+            </span>
           </div>
-        </div>
+          <p className="text-sm leading-6 text-white/58">
+            Los servicios responden y el stock se mantiene sincronizado con la base de datos.
+          </p>
+          <div className="mt-5 rounded-2xl border border-white/10 bg-white/5 p-4">
+            <p className="text-xs font-bold uppercase tracking-[0.12em] text-white/48">Productos con stock bajo</p>
+            <p className="mt-2 text-3xl font-black">{stats.lowStock}</p>
+          </div>
+        </section>
       </div>
     </AdminTemplate>
   );

@@ -1,74 +1,177 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import {
+  BarChart3,
+  Coffee,
+  FolderKanban,
+  Home,
+  LogOut,
+  Menu,
+  Package,
+  X,
+} from "lucide-react";
+import { useState } from "react";
+
+const navItems = [
+  { name: "Dashboard", path: "/dashboard", icon: Home },
+  { name: "Categorias", path: "/categories", icon: FolderKanban },
+  { name: "Productos", path: "/products", icon: Package },
+  { name: "Movimientos", path: "/movements", icon: BarChart3 },
+];
+
+const Brand = () => (
+  <div className="flex items-center gap-3">
+    <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/10">
+      <img src="/favicon.png" alt="Don Gato" className="h-8 w-8 object-contain" />
+    </div>
+    <div>
+      <p className="text-base font-black leading-tight text-[var(--text-light)]">Don Gato</p>
+      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[var(--text-light)]/45">
+        Inventario
+      </p>
+    </div>
+  </div>
+);
+
+const NavLinks = ({ locationPath, mobile = false, onNavigate }) => (
+  <nav className={mobile ? "grid gap-2" : "flex-1 space-y-2 overflow-y-auto px-4"}>
+    {navItems.map((item) => {
+      const Icon = item.icon;
+      const isActive = locationPath === item.path;
+
+      return (
+        <Link
+          key={item.path}
+          to={item.path}
+          onClick={onNavigate}
+          className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold transition ${
+            isActive
+              ? "bg-[var(--accent)] text-white shadow-lg shadow-black/20"
+              : "text-[var(--text-light)]/60 hover:bg-white/10 hover:text-[var(--text-light)]"
+          }`}
+        >
+          <Icon size={19} />
+          <span>{item.name}</span>
+          {isActive && <span className="ml-auto h-2 w-2 rounded-full bg-white" />}
+        </Link>
+      );
+    })}
+  </nav>
+);
 
 export const AdminTemplate = ({ children }) => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("username");
-    window.location.href = "/";
+    navigate("/");
   };
 
-  const navItems = [
-    { name: "Dashboard", path: "/dashboard", icon: "M4 6h16M4 12h16M4 18h16" },
-    { name: "Categorías", path: "/categories", icon: "M7 7h.01M7 11h.01M7 15h.01M11 7h8M11 11h8M11 15h8" },
-    { name: "Productos", path: "/products", icon: "M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" },
-    { name: "Movimientos", path: "/movements", icon: "M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" },
-  ];
-
   return (
-    <div className="flex h-screen bg-[var(--bg-main)] overflow-hidden">
-      {/* Sidebar - Fixed Width */}
-      <aside className="w-64 bg-[var(--bg-sidebar)] flex flex-col shadow-2xl z-[100]">
-        <div className="p-8 flex flex-col items-center">
-          <div className="w-16 h-16 bg-white/10 rounded-2xl p-3 mb-4 shadow-inner border border-white/5">
-            <img src="/favicon.png" alt="Logo" className="w-full h-full object-contain" />
-          </div>
-          <h1 className="text-[var(--text-light)] font-bold text-lg tracking-tight font-heading">Don Gato Inv</h1>
-          <p className="text-[var(--text-light)]/40 text-[10px] uppercase font-black tracking-widest mt-1">Gourmet System</p>
+    <div className="app-shell flex bg-[var(--bg-main)]">
+      <aside className="fixed inset-y-0 left-0 z-50 hidden w-64 flex-col bg-[var(--bg-sidebar)] shadow-2xl lg:flex">
+        <div className="p-6">
+          <Brand />
         </div>
-        
-        <nav className="flex-1 px-4 space-y-2 overflow-y-auto">
+        <div className="mx-6 mb-4 rounded-2xl border border-white/10 bg-white/5 p-4">
+          <div className="mb-2 flex items-center gap-2 text-[var(--text-light)]">
+            <Coffee size={17} />
+            <span className="text-xs font-black uppercase tracking-[0.16em]">Operacion</span>
+          </div>
+          <p className="text-xs leading-relaxed text-[var(--text-light)]/48">
+            Control diario de productos, categorias y stock.
+          </p>
+        </div>
+        <NavLinks locationPath={location.pathname} onNavigate={() => setMobileMenuOpen(false)} />
+        <div className="p-6">
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-xs font-black uppercase tracking-[0.14em] text-[var(--text-light)]/70 transition hover:bg-red-500/15 hover:text-red-300"
+          >
+            <LogOut size={17} />
+            Cerrar sesion
+          </button>
+        </div>
+      </aside>
+
+      <div className="min-w-0 flex-1 lg:pl-64">
+        <header className="sticky top-0 z-40 border-b border-[var(--border-soft)] bg-[var(--bg-main)]/90 px-4 py-3 backdrop-blur-xl lg:hidden">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--bg-sidebar)]">
+                <img src="/favicon.png" alt="Don Gato" className="h-7 w-7 object-contain" />
+              </div>
+              <div>
+                <p className="text-sm font-black leading-tight">Don Gato</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">
+                  Inventario
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(true)}
+              className="rounded-xl border border-[var(--border-soft)] bg-white/70 p-2 text-[var(--text-dark)]"
+              aria-label="Abrir menu"
+            >
+              <Menu size={22} />
+            </button>
+          </div>
+        </header>
+
+        {mobileMenuOpen && (
+          <div className="fixed inset-0 z-[110] bg-[var(--bg-sidebar)]/60 p-4 backdrop-blur-sm lg:hidden">
+            <div className="ml-auto flex h-full w-full max-w-sm flex-col rounded-3xl bg-[var(--bg-sidebar)] p-5 shadow-2xl">
+              <div className="mb-6 flex items-center justify-between">
+                <Brand />
+                <button
+                  type="button"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="rounded-xl bg-white/10 p-2 text-[var(--text-light)]"
+                  aria-label="Cerrar menu"
+                >
+                  <X size={21} />
+                </button>
+              </div>
+              <NavLinks locationPath={location.pathname} mobile onNavigate={() => setMobileMenuOpen(false)} />
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="mt-auto flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-xs font-black uppercase tracking-[0.14em] text-[var(--text-light)]/70"
+              >
+                <LogOut size={17} />
+                Cerrar sesion
+              </button>
+            </div>
+          </div>
+        )}
+
+        <main className="min-h-screen px-4 py-5 pb-24 sm:px-6 lg:px-10 lg:py-9">
+          <div className="mx-auto max-w-7xl animate-slide-in">{children}</div>
+        </main>
+
+        <nav className="fixed inset-x-3 bottom-3 z-40 grid grid-cols-4 rounded-3xl border border-white/50 bg-[var(--bg-sidebar)]/95 p-2 shadow-2xl backdrop-blur lg:hidden">
           {navItems.map((item) => {
+            const Icon = item.icon;
             const isActive = location.pathname === item.path;
             return (
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group ${
-                  isActive
-                    ? "bg-[var(--accent)] text-white shadow-lg shadow-black/20"
-                    : "text-[var(--text-light)]/50 hover:text-[var(--text-light)] hover:bg-white/5"
+                className={`flex flex-col items-center gap-1 rounded-2xl px-2 py-2 text-[10px] font-bold transition ${
+                  isActive ? "bg-[var(--accent)] text-white" : "text-[var(--text-light)]/58"
                 }`}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" className={isActive ? "opacity-100" : "opacity-40 group-hover:opacity-100"}>
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
-                </svg>
-                <span className="font-bold text-sm">{item.name}</span>
-                {isActive && <div className="ml-auto w-1.5 h-1.5 bg-white rounded-full"></div>}
+                <Icon size={18} />
+                <span className="max-w-full truncate">{item.name}</span>
               </Link>
             );
           })}
         </nav>
-
-        <div className="p-6 mt-auto">
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-white/5 hover:bg-red-500/20 text-[var(--text-light)]/60 hover:text-red-400 rounded-xl transition-all font-bold text-xs uppercase tracking-widest border border-white/5"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
-            Cerrar Sesión
-          </button>
-        </div>
-      </aside>
-
-      {/* Main Content Area - Scrollable */}
-      <main className="flex-1 overflow-y-auto bg-[var(--bg-main)] p-6 lg:p-10">
-        <div className="max-w-7xl mx-auto animate-slide-in">
-          {children}
-        </div>
-      </main>
+      </div>
     </div>
   );
 };

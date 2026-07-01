@@ -22,7 +22,7 @@ export const productService = {
   },
 
   search: async (name) => {
-    const response = await api.get(`/products/search?name=${name}`);
+    const response = await api.get(`/products/search?name=${encodeURIComponent(name)}`);
     return response.data;
   },
 

@@ -1,6 +1,10 @@
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Edit3, FolderKanban, Plus, Search, Trash2 } from "lucide-react";
 import { AdminTemplate } from "../components/templates/AdminTemplate";
 import { categoryService } from "../services/categoryService";
+import { ConfirmDialog } from "../components/ui/ConfirmDialog";
+import { Feedback, FieldError } from "../components/ui/Feedback";
+import { hasErrors, normalizeText, validateCategory } from "../utils/validation";
 
 export const CategoriesPage = () => {
   const [categories, setCategories] = useState([]);
@@ -8,111 +12,162 @@ export const CategoriesPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
   const [formData, setFormData] = useState({ name: "" });
+  const [search, setSearch] = useState("");
+  const [feedback, setFeedback] = useState(null);
+  const [categoryToDelete, setCategoryToDelete] = useState(null);
 
   const fetchData = async () => {
     try {
+      setLoading(true);
       const data = await categoryService.getAll();
       setCategories(data);
-    } catch (error) { console.error(error); }
-    finally { setLoading(false); }
+    } catch {
+      setFeedback({ type: "error", message: "No se pudieron cargar las categorias." });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchData();
+  }, []);
+
+  const errors = validateCategory(formData, categories, editingCategory?.id ?? null);
+  const isInvalid = hasErrors(errors);
+
+  const filteredCategories = useMemo(() => {
+    const query = normalizeText(search).toLowerCase();
+    if (!query) return categories;
+    return categories.filter((category) => normalizeText(category.name).toLowerCase().includes(query));
+  }, [categories, search]);
 
   const handleOpenCreate = () => {
     setEditingCategory(null);
     setFormData({ name: "" });
+    setFeedback(null);
     setIsModalOpen(true);
   };
 
   const handleOpenEdit = (category) => {
     setEditingCategory(category);
     setFormData({ name: category.name });
+    setFeedback(null);
     setIsModalOpen(true);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    if (isInvalid) return;
+
     try {
+      const payload = { name: normalizeText(formData.name) };
       if (editingCategory) {
-        await categoryService.update(editingCategory.id, formData);
+        await categoryService.update(editingCategory.id, payload);
+        setFeedback({ type: "success", message: "Categoria actualizada correctamente." });
       } else {
-        await categoryService.create(formData);
+        await categoryService.create(payload);
+        setFeedback({ type: "success", message: "Categoria creada correctamente." });
       }
       setIsModalOpen(false);
       fetchData();
-    } catch (err) { alert("Error al procesar categoría"); }
+    } catch {
+      setFeedback({ type: "error", message: "No se pudo procesar la categoria." });
+    }
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("¿Estás seguro de eliminar esta categoría?")) {
-      try {
-        await categoryService.delete(id);
-        fetchData();
-      } catch (err) { alert("No se puede eliminar la categoría (puede tener productos asociados)"); }
+  const handleDelete = async () => {
+    if (!categoryToDelete) return;
+
+    try {
+      await categoryService.delete(categoryToDelete.id);
+      setFeedback({ type: "success", message: "Categoria eliminada correctamente." });
+      setCategoryToDelete(null);
+      fetchData();
+    } catch {
+      setFeedback({
+        type: "error",
+        message: "No se puede eliminar la categoria porque puede tener productos asociados.",
+      });
+      setCategoryToDelete(null);
     }
   };
 
   return (
     <AdminTemplate>
-      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-10">
+      <header className="mb-7 grid gap-5 lg:grid-cols-[1fr_auto] lg:items-end">
         <div>
-          <div className="flex items-center gap-2 text-[var(--accent)] font-black text-[10px] uppercase tracking-widest mb-2">
-            <div className="h-0.5 w-6 bg-[var(--accent)] rounded-full"></div>
-            Organización
+          <div className="mb-2 flex items-center gap-2 text-xs font-black uppercase tracking-[0.18em] text-[var(--accent)]">
+            <span className="h-1 w-8 rounded-full bg-[var(--accent)]" />
+            Organizacion
           </div>
-          <h2 className="text-3xl font-bold text-[var(--text-dark)] tracking-tight">Categorías</h2>
+          <h1 className="text-3xl font-black tracking-normal text-[var(--text-dark)]">Categorias</h1>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--text-muted)]">
+            Agrupa productos para encontrarlos rapido y mantener limpio el catalogo.
+          </p>
         </div>
-        <button 
-          onClick={handleOpenCreate}
-          className="flex items-center gap-2 px-6 py-3 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-bold text-sm rounded-xl shadow-lg transition-all"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          Nueva Categoría
+        <button type="button" onClick={handleOpenCreate} className="btn-primary px-5 py-3 text-sm">
+          <Plus size={18} />
+          Nueva categoria
         </button>
       </header>
 
+      {feedback && (
+        <div className="mb-5">
+          <Feedback type={feedback.type} message={feedback.message} onClose={() => setFeedback(null)} />
+        </div>
+      )}
+
+      <section className="surface-panel mb-5 rounded-3xl p-4">
+        <div className="relative max-w-md">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" size={18} />
+          <input
+            type="text"
+            className="input-base py-3 pl-11 pr-4 text-sm font-semibold"
+            placeholder="Buscar categoria..."
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+          />
+        </div>
+      </section>
+
       {loading ? (
-        <div className="h-64 flex items-center justify-center">
-          <div className="w-8 h-8 border-4 border-[var(--accent)] border-t-transparent rounded-full animate-spin"></div>
+        <div className="flex h-64 items-center justify-center">
+          <div className="h-9 w-9 animate-spin rounded-full border-4 border-[var(--accent)] border-t-transparent" />
         </div>
       ) : (
-        <div className="bg-white rounded-3xl shadow-xl border border-black/5 overflow-hidden">
-          <div className="overflow-x-auto">
+        <>
+          <div className="hidden overflow-hidden rounded-3xl border border-[var(--border-soft)] bg-white/90 shadow-xl md:block">
             <table className="w-full text-left">
-              <thead>
-                <tr className="bg-[var(--bg-sidebar)] text-[var(--text-light)]">
-                  <th className="p-6 font-black uppercase tracking-widest text-[10px] opacity-40 text-center w-24">ID</th>
-                  <th className="p-6 font-bold text-sm uppercase">Nombre de la Categoría</th>
-                  <th className="p-6 font-bold text-sm uppercase text-right">Acciones</th>
+              <thead className="bg-[var(--bg-sidebar)] text-[var(--text-light)]">
+                <tr>
+                  <th className="px-6 py-4 text-xs font-black uppercase tracking-[0.16em] text-white/48">ID</th>
+                  <th className="px-6 py-4 text-xs font-black uppercase tracking-[0.16em]">Nombre</th>
+                  <th className="px-6 py-4 text-right text-xs font-black uppercase tracking-[0.16em]">Acciones</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 text-sm">
-                {categories.map((cat) => (
-                  <tr key={cat.id} className="hover:bg-slate-50 transition-colors group">
-                    <td className="p-6 text-[var(--text-muted)] font-mono text-xs text-center font-bold">#{cat.id}</td>
-                    <td className="p-6 font-bold text-[var(--text-dark)] text-lg">{cat.name}</td>
-                    <td className="p-6 text-right">
+              <tbody className="divide-y divide-[var(--border-soft)]">
+                {filteredCategories.map((category) => (
+                  <tr key={category.id} className="transition hover:bg-[var(--surface-soft)]/45">
+                    <td className="px-6 py-4 font-mono text-xs font-bold text-[var(--text-muted)]">#{category.id}</td>
+                    <td className="px-6 py-4 text-base font-black">{category.name}</td>
+                    <td className="px-6 py-4">
                       <div className="flex justify-end gap-2">
-                        <button 
-                          onClick={() => handleOpenEdit(cat)}
-                          className="p-2 hover:bg-slate-100 text-slate-400 hover:text-[var(--accent)] rounded-lg transition-all"
-                          title="Editar"
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEdit(category)}
+                          className="rounded-xl p-2 text-[var(--text-muted)] transition hover:bg-white hover:text-[var(--accent)]"
+                          aria-label={`Editar ${category.name}`}
                         >
-                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                          </svg>
+                          <Edit3 size={18} />
                         </button>
-                        <button 
-                          onClick={() => handleDelete(cat.id)}
-                          className="p-2 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-lg transition-all"
-                          title="Eliminar"
+                        <button
+                          type="button"
+                          onClick={() => setCategoryToDelete(category)}
+                          className="rounded-xl p-2 text-[var(--text-muted)] transition hover:bg-red-50 hover:text-red-600"
+                          aria-label={`Eliminar ${category.name}`}
                         >
-                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
+                          <Trash2 size={18} />
                         </button>
                       </div>
                     </td>
@@ -121,32 +176,79 @@ export const CategoriesPage = () => {
               </tbody>
             </table>
           </div>
+
+          <div className="grid gap-3 md:hidden">
+            {filteredCategories.map((category) => (
+              <article key={category.id} className="surface-panel rounded-3xl p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span className="rounded-2xl bg-[var(--bg-sidebar)] p-3 text-[var(--text-light)]">
+                      <FolderKanban size={20} />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="truncate text-base font-black">{category.name}</p>
+                      <p className="font-mono text-xs font-bold text-[var(--text-muted)]">#{category.id}</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-1">
+                    <button
+                      type="button"
+                      onClick={() => handleOpenEdit(category)}
+                      className="rounded-xl bg-white/75 p-2 text-[var(--text-muted)]"
+                      aria-label={`Editar ${category.name}`}
+                    >
+                      <Edit3 size={17} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setCategoryToDelete(category)}
+                      className="rounded-xl bg-red-50 p-2 text-red-600"
+                      aria-label={`Eliminar ${category.name}`}
+                    >
+                      <Trash2 size={17} />
+                    </button>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        </>
+      )}
+
+      {!loading && filteredCategories.length === 0 && (
+        <div className="surface-panel rounded-3xl p-10 text-center text-sm font-semibold text-[var(--text-muted)]">
+          No se encontraron categorias.
         </div>
       )}
 
       {isModalOpen && (
-        <div className="fixed inset-0 bg-[var(--bg-sidebar)]/60 backdrop-blur-md flex items-center justify-center z-50 p-4 pl-72 sm:p-6 transition-all duration-500">
-          <div className="bg-white p-10 rounded-[2.5rem] shadow-2xl w-full max-w-md animate-slide-in relative overflow-hidden border border-white/20">
-            <div className="absolute top-0 left-0 w-full h-1.5 bg-[var(--accent)]"></div>
-            <h3 className="text-xl font-bold mb-1 text-[var(--text-dark)] uppercase tracking-tight">
-              {editingCategory ? "Editar Categoría" : "Nueva Categoría"}
-            </h3>
-            <p className="text-[var(--text-muted)] text-[10px] font-bold uppercase tracking-widest mb-8">Gestión de Secciones</p>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Nombre de la Categoría</label>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[var(--bg-sidebar)]/60 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
+            <div className="mb-6">
+              <p className="text-xs font-black uppercase tracking-[0.16em] text-[var(--accent)]">
+                {editingCategory ? "Editar" : "Nueva"}
+              </p>
+              <h2 className="mt-1 text-2xl font-black text-[var(--text-dark)]">Categoria</h2>
+            </div>
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div>
+                <label className="mb-1.5 block text-xs font-black uppercase tracking-[0.14em] text-[var(--text-muted)]">
+                  Nombre de la categoria
+                </label>
                 <input
-                  required
                   type="text"
-                  className="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-[var(--accent)] transition-all font-bold text-sm"
-                  placeholder="Ej: Cafés de Especialidad"
+                  className={`input-base px-4 py-3 text-sm font-semibold ${errors.name ? "input-error" : ""}`}
+                  placeholder="Ej: Cafes de especialidad"
                   value={formData.name}
-                  onChange={(e) => setFormData({ name: e.target.value })}
+                  onChange={(event) => setFormData({ name: event.target.value })}
                 />
+                <FieldError message={errors.name} />
               </div>
-              <div className="flex gap-3 pt-4">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 p-4 text-xs font-bold uppercase text-slate-400 hover:bg-slate-50 rounded-xl transition-all">Cancelar</button>
-                <button type="submit" className="flex-1 p-4 bg-[var(--bg-sidebar)] text-white text-xs font-bold uppercase rounded-xl hover:bg-black shadow-lg transition-all">
+              <div className="flex gap-3 pt-2">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="btn-secondary flex-1 px-4 py-3">
+                  Cancelar
+                </button>
+                <button type="submit" disabled={isInvalid} className="btn-primary flex-1 px-4 py-3">
                   {editingCategory ? "Actualizar" : "Guardar"}
                 </button>
               </div>
@@ -154,6 +256,16 @@ export const CategoriesPage = () => {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        open={Boolean(categoryToDelete)}
+        title="Eliminar categoria"
+        message={`Esta accion intentara eliminar "${categoryToDelete?.name}". Si tiene productos asociados, el sistema lo rechazara.`}
+        confirmLabel="Eliminar"
+        danger
+        onConfirm={handleDelete}
+        onCancel={() => setCategoryToDelete(null)}
+      />
     </AdminTemplate>
   );
 };

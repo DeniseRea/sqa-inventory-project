@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Coffee, Lock, PackageCheck, ShieldCheck, UserRound } from "lucide-react";
 import { authService } from "../services/auth";
+import { Feedback } from "../components/ui/Feedback";
 
 export const LoginPage = () => {
   const [username, setUsername] = useState("");
@@ -9,83 +11,139 @@ export const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     setLoading(true);
     setError("");
+
     try {
-      await authService.login(username, password);
+      await authService.login(username.trim(), password);
       navigate("/dashboard");
-    } catch (err) {
-      setError("Credenciales inválidas.");
+    } catch {
+      setError("Usuario o contrasena incorrectos. Revisa tus datos e intenta otra vez.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[var(--bg-main)] p-6">
-      <div className="w-full max-w-[400px] animate-slide-in">
-        <div className="bg-[var(--bg-card)] rounded-[2.5rem] shadow-2xl overflow-hidden border border-[var(--bg-sidebar)]/20">
-          {/* Header */}
-          <div className="p-10 pb-6 flex flex-col items-center text-center">
-            <div className="w-20 h-20 bg-white/10 rounded-2xl p-4 mb-6 shadow-inner border border-white/5">
-              <img src="/favicon.png" alt="Logo" className="w-full h-full object-contain" />
+    <main className="min-h-screen bg-[var(--bg-sidebar)] p-3 text-[var(--text-light)] sm:p-5">
+      <section className="relative min-h-[calc(100vh-1.5rem)] overflow-hidden rounded-[1.75rem] bg-[var(--bg-sidebar)] sm:min-h-[calc(100vh-2.5rem)]">
+        <img
+          src="/login-hero.png"
+          alt="Barra de cafeteria Don Gato"
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#1a120f]/95 via-[#2b1b17]/78 to-[#2b1b17]/22" />
+        <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[#1a120f]/92 to-transparent" />
+
+        <div className="relative z-10 grid min-h-[calc(100vh-1.5rem)] items-center gap-8 px-5 py-8 sm:min-h-[calc(100vh-2.5rem)] sm:px-8 lg:grid-cols-[1fr_420px] lg:px-14">
+          <div className="max-w-2xl">
+            <div className="mb-8 flex items-center gap-3">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/10 backdrop-blur">
+                <img src="/favicon.png" alt="Don Gato" className="h-10 w-10 object-contain" />
+              </div>
+              <div>
+                <p className="text-lg font-black leading-tight">Don Gato</p>
+                <p className="text-[11px] font-black uppercase tracking-[0.24em] text-white/45">
+                  Gourmet Inventory
+                </p>
+              </div>
             </div>
-            <h1 className="text-2xl font-bold text-[var(--text-light)] tracking-tight font-heading">Don Gato Inv</h1>
-            <p className="text-[var(--text-light)]/40 text-[10px] font-black uppercase tracking-widest mt-1">Gestión Gourmet de Inventarios</p>
+
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2 text-xs font-bold text-white/70 backdrop-blur">
+              <Coffee size={16} />
+              Cafeteria, stock y ventas bajo control
+            </div>
+            <h1 className="max-w-2xl text-4xl font-black leading-[1.02] tracking-normal text-white sm:text-5xl lg:text-6xl">
+              Inventario claro para una cafeteria que se mueve rapido.
+            </h1>
+            <p className="mt-5 max-w-xl text-base leading-7 text-white/68">
+              Gestiona productos, categorias y movimientos con una experiencia pensada para revisar datos sin perder tiempo.
+            </p>
+
+            <div className="mt-8 grid max-w-xl gap-3 sm:grid-cols-3">
+              {[
+                { icon: PackageCheck, label: "Stock visible" },
+                { icon: ShieldCheck, label: "Datos validados" },
+                { icon: Coffee, label: "Flujo diario" },
+              ].map((item) => {
+                const Icon = item.icon;
+                return (
+                  <div key={item.label} className="rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur">
+                    <Icon size={20} className="mb-3 text-[var(--accent)]" />
+                    <p className="text-sm font-bold text-white/80">{item.label}</p>
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="px-10 pb-10 space-y-5">
-            <div className="space-y-1.5">
-              <label className="block text-[10px] font-black text-[var(--text-light)]/60 uppercase tracking-widest ml-1">Usuario</label>
-              <div className="relative">
-                <input
-                  type="text"
-                  required
-                  className="w-full bg-black/20 border border-white/5 rounded-xl p-4 text-[var(--text-light)] text-sm outline-none focus:ring-2 focus:ring-[var(--accent)] transition-all placeholder:opacity-20"
-                  placeholder="admin"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="block text-[10px] font-black text-[var(--text-light)]/60 uppercase tracking-widest ml-1">Contraseña</label>
-              <div className="relative">
-                <input
-                  type="password"
-                  required
-                  className="w-full bg-black/20 border border-white/5 rounded-xl p-4 text-[var(--text-light)] text-sm outline-none focus:ring-2 focus:ring-[var(--accent)] transition-all placeholder:opacity-20"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
+          <div className="surface-panel w-full rounded-[1.5rem] p-5 text-[var(--text-dark)] sm:p-7">
+            <div className="mb-6">
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--accent)]">Acceso interno</p>
+              <h2 className="mt-2 text-2xl font-black">Entrar al portal</h2>
+              <p className="mt-1 text-sm text-[var(--text-muted)]">
+                Usa tus credenciales para administrar el inventario.
+              </p>
             </div>
 
             {error && (
-              <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-3 rounded-xl text-[10px] font-bold text-center uppercase tracking-widest">
-                {error}
+              <div className="mb-5">
+                <Feedback type="error" message={error} onClose={() => setError("")} />
               </div>
             )}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-4 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-black text-xs uppercase tracking-widest rounded-xl shadow-lg transition-all transform active:scale-95 disabled:opacity-50 mt-2"
-            >
-              {loading ? "Iniciando..." : "Entrar al Portal"}
-            </button>
-          </form>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="mb-1.5 block text-xs font-black uppercase tracking-[0.14em] text-[var(--text-muted)]">
+                  Usuario
+                </label>
+                <div className="relative">
+                  <UserRound
+                    size={18}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)]"
+                  />
+                  <input
+                    type="text"
+                    required
+                    autoComplete="username"
+                    className="input-base py-3.5 pl-11 pr-4 text-sm font-semibold"
+                    placeholder="admin"
+                    value={username}
+                    onChange={(event) => setUsername(event.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="mb-1.5 block text-xs font-black uppercase tracking-[0.14em] text-[var(--text-muted)]">
+                  Contrasena
+                </label>
+                <div className="relative">
+                  <Lock
+                    size={18}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)]"
+                  />
+                  <input
+                    type="password"
+                    required
+                    autoComplete="current-password"
+                    className="input-base py-3.5 pl-11 pr-4 text-sm font-semibold"
+                    placeholder="Ingresa tu contrasena"
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                  />
+                </div>
+              </div>
+
+              <button type="submit" disabled={loading} className="btn-primary w-full px-5 py-4 text-sm">
+                {loading ? "Verificando..." : "Entrar al sistema"}
+              </button>
+            </form>
+          </div>
         </div>
-        
-        <p className="text-center text-[var(--bg-sidebar)]/30 mt-8 text-[10px] font-black uppercase tracking-[0.3em]">
-          &copy; 2026 DON GATO GOURMET
-        </p>
-      </div>
-    </div>
+      </section>
+    </main>
   );
 };
