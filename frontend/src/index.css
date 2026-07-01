@@ -305,6 +305,64 @@ svg {
   }
 }
 
+.hero-integrated-steam {
+  position: absolute;
+  left: 49%;
+  top: 45%;
+  z-index: 9;
+  display: none;
+  width: 4rem;
+  height: 5rem;
+  pointer-events: none;
+  filter: drop-shadow(0 0 12px rgba(255, 247, 234, 0.25));
+}
+
+.steam-wisp {
+  position: absolute;
+  display: block;
+  width: 0.48rem;
+  height: 2.9rem;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(255, 247, 234, 0), rgba(255, 247, 234, 0.7), rgba(255, 247, 234, 0));
+  filter: blur(2px);
+  opacity: 0.72;
+  transform-origin: bottom;
+}
+
+.steam-wisp-one {
+  left: 56%;
+  top: 16%;
+  animation: steamRise 3.2s ease-in-out infinite;
+}
+
+.steam-wisp-two {
+  left: 63%;
+  top: 13%;
+  animation: steamRise 3.6s ease-in-out 0.5s infinite;
+}
+
+.steam-wisp-three {
+  left: 49%;
+  top: 14%;
+  animation: steamRise 3.4s ease-in-out 1s infinite;
+}
+
+@keyframes steamRise {
+  0% {
+    opacity: 0;
+    transform: translateY(16px) translateX(0) scaleY(0.72) rotate(0deg);
+  }
+
+  35% {
+    opacity: 0.72;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(-28px) translateX(12px) scaleY(1.25) rotate(16deg);
+  }
+}
+
 .animate-login-card {
   animation: loginCardIn 620ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
@@ -348,6 +406,12 @@ svg {
 
   .animate-login-copy {
     animation-delay: 220ms;
+  }
+}
+
+@media (min-width: 1280px) {
+  .hero-integrated-steam {
+    display: block;
   }
 }
 

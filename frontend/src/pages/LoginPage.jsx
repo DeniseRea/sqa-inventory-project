@@ -30,12 +30,17 @@ export const LoginPage = () => {
     <main className="min-h-screen bg-[var(--bg-sidebar)] p-3 text-[var(--text-light)] sm:p-5">
       <section className="relative min-h-[calc(100vh-1.5rem)] overflow-hidden rounded-[1.75rem] bg-[var(--bg-sidebar)] sm:min-h-[calc(100vh-2.5rem)]">
         <img
-          src="/login-hero.png"
+          src="/login-hero-with-cat.png"
           alt="Barra de cafeteria Don Gato"
           className="absolute inset-0 h-full w-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#1a120f]/95 via-[#2b1b17]/78 to-[#2b1b17]/22" />
-        <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[#1a120f]/92 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#1a120f]/80 via-[#2b1b17]/42 to-[#2b1b17]/0" />
+        <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[#1a120f]/58 to-transparent" />
+        <div className="hero-integrated-steam" aria-hidden="true">
+          <span className="steam-wisp steam-wisp-one" />
+          <span className="steam-wisp steam-wisp-two" />
+          <span className="steam-wisp steam-wisp-three" />
+        </div>
 
         <div className="relative z-10 grid min-h-[calc(100vh-1.5rem)] items-start gap-8 px-5 py-5 sm:min-h-[calc(100vh-2.5rem)] sm:px-8 sm:py-8 lg:grid-cols-[1fr_420px] lg:items-center lg:px-14">
           <div className="order-2 max-w-2xl animate-login-copy lg:order-1">
