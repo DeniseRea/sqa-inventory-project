@@ -18,18 +18,25 @@ const navItems = [
   { name: "Movimientos", path: "/movements", icon: BarChart3 },
 ];
 
-const Brand = () => (
-  <div className="flex items-center gap-3">
+const Brand = ({ onClick }) => (
+  <Link
+    to="/dashboard"
+    onClick={onClick}
+    className="group flex items-center gap-3 rounded-2xl outline-none transition focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+    aria-label="Ir al dashboard"
+  >
     <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/10 shadow-inner">
       <img src="/favicon.png" alt="Don Gato" className="h-8 w-8 object-contain" />
     </div>
     <div>
-      <p className="text-base font-black leading-tight text-[var(--text-light)]">Don Gato</p>
+      <p className="text-base font-black leading-tight text-[var(--text-light)] transition group-hover:text-[var(--accent-soft)]">
+        Don Gato
+      </p>
       <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[var(--text-light)]/45">
         Inventario
       </p>
     </div>
-  </div>
+  </Link>
 );
 
 const NavLinks = ({ locationPath, mobile = false, onNavigate }) => (
@@ -103,7 +110,7 @@ export const AdminTemplate = ({ children }) => {
       <div className="app-main min-w-0 flex-1 lg:pl-64">
         <header className="sticky top-0 z-40 border-b border-[var(--border-soft)] bg-[var(--bg-main)]/90 px-4 py-3 backdrop-blur-xl lg:hidden">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+            <Link to="/dashboard" className="flex items-center gap-3" aria-label="Ir al dashboard">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--bg-sidebar)]">
                 <img src="/favicon.png" alt="Don Gato" className="h-7 w-7 object-contain" />
               </div>
@@ -113,7 +120,7 @@ export const AdminTemplate = ({ children }) => {
                   Inventario
                 </p>
               </div>
-            </div>
+            </Link>
             <button
               type="button"
               onClick={() => setMobileMenuOpen(true)}
@@ -126,10 +133,16 @@ export const AdminTemplate = ({ children }) => {
         </header>
 
         {mobileMenuOpen && (
-          <div className="fixed inset-0 z-[110] bg-[var(--bg-sidebar)]/60 p-4 backdrop-blur-sm lg:hidden">
-            <div className="ml-auto flex h-full w-full max-w-sm flex-col rounded-3xl bg-[var(--bg-sidebar)] p-5 shadow-2xl">
+          <div
+            className="drawer-backdrop fixed inset-0 z-[110] bg-[var(--bg-sidebar)]/35 backdrop-blur-md lg:hidden"
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            <div
+              className="drawer-panel ml-auto flex h-full w-[82vw] max-w-xs flex-col rounded-l-[2rem] bg-[var(--bg-sidebar)] p-5 shadow-2xl"
+              onClick={(event) => event.stopPropagation()}
+            >
               <div className="mb-6 flex items-center justify-between">
-                <Brand />
+                <Brand onClick={() => setMobileMenuOpen(false)} />
                 <button
                   type="button"
                   onClick={() => setMobileMenuOpen(false)}

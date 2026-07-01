@@ -37,9 +37,9 @@ export const LoginPage = () => {
         <div className="absolute inset-0 bg-gradient-to-r from-[#1a120f]/95 via-[#2b1b17]/78 to-[#2b1b17]/22" />
         <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[#1a120f]/92 to-transparent" />
 
-        <div className="relative z-10 grid min-h-[calc(100vh-1.5rem)] items-center gap-8 px-5 py-8 sm:min-h-[calc(100vh-2.5rem)] sm:px-8 lg:grid-cols-[1fr_420px] lg:px-14">
-          <div className="max-w-2xl">
-            <div className="mb-8 flex items-center gap-4">
+        <div className="relative z-10 grid min-h-[calc(100vh-1.5rem)] items-start gap-8 px-5 py-5 sm:min-h-[calc(100vh-2.5rem)] sm:px-8 sm:py-8 lg:grid-cols-[1fr_420px] lg:items-center lg:px-14">
+          <div className="order-2 max-w-2xl animate-login-copy lg:order-1">
+            <div className="mb-8 hidden items-center gap-4 lg:flex">
               <div className="flex h-20 w-20 items-center justify-center rounded-[1.4rem] border border-white/10 bg-white/10 p-2 shadow-2xl backdrop-blur sm:h-24 sm:w-24">
                 <img src="/favicon.png" alt="Don Gato" className="h-full w-full object-contain" />
               </div>
@@ -79,7 +79,18 @@ export const LoginPage = () => {
             </div>
           </div>
 
-          <div className="surface-panel w-full rounded-[1.5rem] p-5 text-[var(--text-dark)] sm:p-7">
+          <div className="surface-panel order-1 w-full rounded-[1.5rem] p-5 text-[var(--text-dark)] sm:p-7 lg:order-2 animate-login-card">
+            <div className="mb-6 flex items-center gap-4 lg:hidden">
+              <div className="flex h-20 w-20 items-center justify-center rounded-[1.4rem] border border-[var(--border-soft)] bg-white/80 p-2 shadow-xl">
+                <img src="/favicon.png" alt="Don Gato" className="h-full w-full object-contain" />
+              </div>
+              <div>
+                <p className="text-2xl font-black leading-tight text-[var(--text-dark)]">Don Gato</p>
+                <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[var(--text-muted)]">
+                  Gourmet Inventory
+                </p>
+              </div>
+            </div>
             <div className="mb-6">
               <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--accent)]">Acceso interno</p>
               <h2 className="mt-2 text-2xl font-black">Entrar al portal</h2>

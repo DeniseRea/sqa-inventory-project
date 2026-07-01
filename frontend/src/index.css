@@ -127,6 +127,10 @@ svg {
   z-index: 1;
 }
 
+.page-hero {
+  animation: heroReveal 520ms ease-out both;
+}
+
 .surface-panel {
   border: 1px solid var(--border-soft);
   background:
@@ -230,9 +234,98 @@ svg {
   }
 }
 
-  .animate-slide-in {
-    animation: slideIn 0.35s ease-out both;
+.animate-slide-in {
+  animation: slideIn 0.35s ease-out both;
+}
+
+@keyframes heroReveal {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.985);
   }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes loginCardIn {
+  from {
+    opacity: 0;
+    transform: translateY(22px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes loginCopyIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes drawerBackdropIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes drawerPanelIn {
+  from {
+    transform: translateX(100%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes subtleFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.animate-login-card {
+  animation: loginCardIn 620ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-login-copy {
+  animation: loginCopyIn 720ms ease-out 120ms both;
+}
+
+.drawer-backdrop {
+  animation: drawerBackdropIn 180ms ease-out both;
+}
+
+.drawer-panel {
+  animation: drawerPanelIn 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.premium-sidebar img,
+.page-hero .btn-primary,
+.animate-login-card img {
+  animation: subtleFloat 5s ease-in-out infinite;
+}
 
 @media (max-width: 767px) {
   body {
@@ -251,5 +344,20 @@ svg {
     background:
       linear-gradient(180deg, rgba(26, 18, 15, 0.94), rgba(43, 27, 23, 0.78)),
       var(--page-hero-image, url("/dashboard-hero.png")) center / cover no-repeat;
+  }
+
+  .animate-login-copy {
+    animation-delay: 220ms;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 1ms !important;
   }
 }
