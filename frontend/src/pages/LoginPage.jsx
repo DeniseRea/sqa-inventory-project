@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Coffee, Lock, PackageCheck, ShieldCheck, UserRound } from "lucide-react";
+import { Coffee, Lock, UserRound } from "lucide-react";
 import { authService } from "../services/auth";
 import { Feedback } from "../components/ui/Feedback";
 
@@ -40,6 +40,9 @@ export const LoginPage = () => {
           <span className="steam-wisp steam-wisp-one" />
           <span className="steam-wisp steam-wisp-two" />
           <span className="steam-wisp steam-wisp-three" />
+          <span className="steam-wisp steam-wisp-four" />
+          <span className="steam-wisp steam-wisp-five" />
+          <span className="steam-wisp steam-wisp-six" />
         </div>
 
         <div className="relative z-10 grid min-h-[calc(100vh-1.5rem)] items-start gap-8 px-5 py-5 sm:min-h-[calc(100vh-2.5rem)] sm:px-8 sm:py-8 lg:grid-cols-[1fr_420px] lg:items-center lg:px-14">
@@ -66,22 +69,6 @@ export const LoginPage = () => {
             <p className="mt-5 max-w-xl text-base leading-7 text-white/68">
               Gestiona productos, categorias y movimientos con una experiencia pensada para revisar datos sin perder tiempo.
             </p>
-
-            <div className="mt-8 grid max-w-xl gap-3 sm:grid-cols-3">
-              {[
-                { icon: PackageCheck, label: "Stock visible" },
-                { icon: ShieldCheck, label: "Datos validados" },
-                { icon: Coffee, label: "Flujo diario" },
-              ].map((item) => {
-                const Icon = item.icon;
-                return (
-                  <div key={item.label} className="rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur">
-                    <Icon size={20} className="mb-3 text-[var(--accent)]" />
-                    <p className="text-sm font-bold text-white/80">{item.label}</p>
-                  </div>
-                );
-              })}
-            </div>
           </div>
 
           <div className="surface-panel order-1 w-full rounded-[1.5rem] p-5 text-[var(--text-dark)] sm:p-7 lg:order-2 animate-login-card">
@@ -125,7 +112,7 @@ export const LoginPage = () => {
                     required
                     autoComplete="username"
                     className="input-base py-3.5 pl-11 pr-4 text-sm font-semibold"
-                    placeholder="admin"
+                    placeholder="tu usuario"
                     value={username}
                     onChange={(event) => setUsername(event.target.value)}
                   />

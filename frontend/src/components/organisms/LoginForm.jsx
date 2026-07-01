@@ -44,7 +44,7 @@ export const LoginForm = ({ onSubmit }) => {
       <FormField
         label="Usuario"
         type="text"
-        placeholder="Ej. admin"
+        placeholder="Ej. usuario"
         value={username}
         onChange={(e) => setUsername(e.target.value)}
       />
