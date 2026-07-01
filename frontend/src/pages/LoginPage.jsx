@@ -39,13 +39,13 @@ export const LoginPage = () => {
 
         <div className="relative z-10 grid min-h-[calc(100vh-1.5rem)] items-center gap-8 px-5 py-8 sm:min-h-[calc(100vh-2.5rem)] sm:px-8 lg:grid-cols-[1fr_420px] lg:px-14">
           <div className="max-w-2xl">
-            <div className="mb-8 flex items-center gap-3">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/10 backdrop-blur">
-                <img src="/favicon.png" alt="Don Gato" className="h-10 w-10 object-contain" />
+            <div className="mb-8 flex items-center gap-4">
+              <div className="flex h-20 w-20 items-center justify-center rounded-[1.4rem] border border-white/10 bg-white/10 p-2 shadow-2xl backdrop-blur sm:h-24 sm:w-24">
+                <img src="/favicon.png" alt="Don Gato" className="h-full w-full object-contain" />
               </div>
               <div>
-                <p className="text-lg font-black leading-tight">Don Gato</p>
-                <p className="text-[11px] font-black uppercase tracking-[0.24em] text-white/45">
+                <p className="text-2xl font-black leading-tight sm:text-3xl">Don Gato</p>
+                <p className="text-[11px] font-black uppercase tracking-[0.24em] text-white/50 sm:text-xs">
                   Gourmet Inventory
                 </p>
               </div>

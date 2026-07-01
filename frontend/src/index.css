@@ -6,6 +6,7 @@
   --bg-card: #4a2c24;
   --accent: #b55239;
   --accent-hover: #9e4630;
+  --accent-soft: #f0a079;
   --text-light: #fff7ea;
   --text-dark: #1a120f;
   --text-muted: #6b4c44;
@@ -13,6 +14,7 @@
   --surface-soft: #f8ead5;
   --border-soft: rgba(43, 27, 23, 0.1);
   --shadow-soft: 0 18px 50px rgba(43, 27, 23, 0.14);
+  --shadow-deep: 0 24px 70px rgba(43, 27, 23, 0.22);
 }
 
 * {
@@ -73,10 +75,80 @@ svg {
   min-height: 100vh;
 }
 
+.app-main {
+  position: relative;
+  isolation: isolate;
+  background:
+    radial-gradient(circle at 15% 0%, rgba(181, 82, 57, 0.16), transparent 25rem),
+    radial-gradient(circle at 90% 12%, rgba(74, 44, 36, 0.12), transparent 30rem),
+    linear-gradient(135deg, rgba(255, 250, 241, 0.72), rgba(242, 223, 194, 0.92));
+}
+
+.app-main::before {
+  content: "";
+  position: fixed;
+  inset: 0 0 auto 16rem;
+  z-index: -1;
+  height: 21rem;
+  background:
+    linear-gradient(180deg, rgba(242, 223, 194, 0.1), rgba(242, 223, 194, 0.92)),
+    linear-gradient(90deg, rgba(242, 223, 194, 0.9), rgba(242, 223, 194, 0.22)),
+    url("/dashboard-hero.png") center 42% / cover no-repeat;
+  opacity: 0.34;
+  pointer-events: none;
+}
+
+.premium-sidebar {
+  background:
+    linear-gradient(180deg, rgba(255, 247, 234, 0.055), transparent 34%),
+    radial-gradient(circle at 10% 0%, rgba(181, 82, 57, 0.22), transparent 15rem),
+    linear-gradient(180deg, #2b1b17 0%, #1a120f 100%);
+}
+
+.page-hero {
+  position: relative;
+  background:
+    linear-gradient(90deg, rgba(26, 18, 15, 0.96) 0%, rgba(43, 27, 23, 0.86) 48%, rgba(43, 27, 23, 0.36) 100%),
+    var(--page-hero-image, url("/dashboard-hero.png")) center 48% / cover no-repeat;
+  box-shadow: var(--shadow-deep);
+}
+
+.page-hero::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 42%;
+  background: linear-gradient(180deg, transparent, rgba(26, 18, 15, 0.42));
+  pointer-events: none;
+}
+
+.page-hero > * {
+  position: relative;
+  z-index: 1;
+}
+
 .surface-panel {
   border: 1px solid var(--border-soft);
-  background: rgba(255, 250, 241, 0.9);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 250, 241, 0.92)),
+    rgba(255, 250, 241, 0.9);
   box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(18px);
+}
+
+.data-shell {
+  border: 1px solid rgba(43, 27, 23, 0.1);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 250, 241, 0.94)),
+    rgba(255, 250, 241, 0.92);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(18px);
+}
+
+.table-head {
+  background:
+    linear-gradient(90deg, rgba(43, 27, 23, 0.98), rgba(74, 44, 36, 0.96)),
+    var(--bg-sidebar);
 }
 
 .input-base {
@@ -158,14 +230,26 @@ svg {
   }
 }
 
-.animate-slide-in {
-  animation: slideIn 0.35s ease-out both;
-}
+  .animate-slide-in {
+    animation: slideIn 0.35s ease-out both;
+  }
 
 @media (max-width: 767px) {
   body {
     background:
       radial-gradient(circle at top, rgba(181, 82, 57, 0.12), transparent 18rem),
       var(--bg-main);
+  }
+
+  .app-main::before {
+    inset: 0;
+    height: 12rem;
+    opacity: 0.18;
+  }
+
+  .page-hero {
+    background:
+      linear-gradient(180deg, rgba(26, 18, 15, 0.94), rgba(43, 27, 23, 0.78)),
+      var(--page-hero-image, url("/dashboard-hero.png")) center / cover no-repeat;
   }
 }

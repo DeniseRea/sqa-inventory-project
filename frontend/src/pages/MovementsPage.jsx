@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ArrowDownLeft, ArrowUpRight, BarChart3, Plus, Search } from "lucide-react";
 import { AdminTemplate } from "../components/templates/AdminTemplate";
+import { PageHeader } from "../components/ui/PageHeader";
 import { stockService } from "../services/stockService";
 import { productService } from "../services/productService";
 import { Feedback, FieldError } from "../components/ui/Feedback";
@@ -115,22 +116,19 @@ export const MovementsPage = () => {
 
   return (
     <AdminTemplate>
-      <header className="mb-7 grid gap-5 lg:grid-cols-[1fr_auto] lg:items-end">
-        <div>
-          <div className="mb-2 flex items-center gap-2 text-xs font-black uppercase tracking-[0.18em] text-[var(--accent)]">
-            <span className="h-1 w-8 rounded-full bg-[var(--accent)]" />
-            Bitacora
-          </div>
-          <h1 className="text-3xl font-black tracking-normal text-[var(--text-dark)]">Movimientos</h1>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--text-muted)]">
-            Registra entradas y salidas manteniendo el stock consistente.
-          </p>
-        </div>
-        <button type="button" onClick={() => setIsModalOpen(true)} className="btn-primary px-5 py-3 text-sm">
-          <Plus size={18} />
-          Registrar movimiento
-        </button>
-      </header>
+      <PageHeader
+        eyebrow="Bitacora"
+        image="/movements-hero.png"
+        title="Movimientos"
+        description="Registra entradas y salidas manteniendo el stock consistente."
+        stat={{ label: "Registros", value: movements.length }}
+        action={
+          <button type="button" onClick={() => setIsModalOpen(true)} className="btn-primary px-5 py-3 text-sm">
+            <Plus size={18} />
+            Registrar movimiento
+          </button>
+        }
+      />
 
       {feedback && (
         <div className="mb-5">
@@ -161,9 +159,9 @@ export const MovementsPage = () => {
         </div>
       ) : (
         <>
-          <div className="hidden overflow-hidden rounded-3xl border border-[var(--border-soft)] bg-white/90 shadow-xl lg:block">
+          <div className="data-shell hidden overflow-hidden rounded-3xl lg:block">
             <table className="w-full text-left">
-              <thead className="bg-[var(--bg-sidebar)] text-[var(--text-light)]">
+              <thead className="table-head text-[var(--text-light)]">
                 <tr>
                   <th className="px-5 py-4 text-xs font-black uppercase tracking-[0.16em] text-white/48">Fecha</th>
                   <th className="px-5 py-4 text-xs font-black uppercase tracking-[0.16em]">Producto</th>

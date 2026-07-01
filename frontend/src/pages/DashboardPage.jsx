@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Activity, ArrowRight, Boxes, FolderKanban, Package, RefreshCcw } from "lucide-react";
 import { AdminTemplate } from "../components/templates/AdminTemplate";
+import { PageHeader } from "../components/ui/PageHeader";
 import { productService } from "../services/productService";
 import { categoryService } from "../services/categoryService";
 import { stockService } from "../services/stockService";
@@ -66,32 +67,31 @@ export const DashboardPage = () => {
 
   return (
     <AdminTemplate>
-      <header className="mb-7 grid gap-5 lg:grid-cols-[1fr_auto] lg:items-end">
-        <div>
-          <div className="mb-2 flex items-center gap-2 text-xs font-black uppercase tracking-[0.18em] text-[var(--accent)]">
-            <span className="h-1 w-8 rounded-full bg-[var(--accent)]" />
-            Vista general
-          </div>
-          <h1 className="text-3xl font-black tracking-normal text-[var(--text-dark)] sm:text-4xl">
-            Hola, <span className="text-[var(--accent)]">{username}</span>
-          </h1>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--text-muted)]">
-            Resumen del inventario y accesos rapidos para las operaciones del dia.
-          </p>
-        </div>
-        <button type="button" onClick={() => navigate("/movements")} className="btn-primary px-5 py-3 text-sm">
-          Registrar movimiento
-          <ArrowRight size={18} />
-        </button>
-      </header>
+      <PageHeader
+        eyebrow="Vista general"
+        image="/dashboard-hero.png"
+        title={
+          <>
+            Hola, <span className="text-[var(--accent-soft)]">{username}</span>
+          </>
+        }
+        description="Resumen del inventario y accesos rapidos para las operaciones del dia."
+        stat={{ label: "Stock bajo", value: stats.lowStock }}
+        action={
+          <button type="button" onClick={() => navigate("/movements")} className="btn-primary px-5 py-3 text-sm">
+            Registrar movimiento
+            <ArrowRight size={18} />
+          </button>
+        }
+      />
 
       {loading ? (
         <div className="flex h-64 items-center justify-center">
           <div className="h-10 w-10 animate-spin rounded-full border-4 border-[var(--accent)] border-t-transparent" />
         </div>
       ) : (
-        <div className="grid gap-5 md:grid-cols-3">
-          {cards.map((card) => {
+          <div className="grid gap-5 md:grid-cols-3">
+            {cards.map((card) => {
             const Icon = card.icon;
             return (
               <button
@@ -101,7 +101,7 @@ export const DashboardPage = () => {
                 className="surface-panel group rounded-3xl p-6 text-left transition hover:-translate-y-1 hover:shadow-2xl"
               >
                 <div className="mb-6 flex items-center justify-between">
-                  <span className="rounded-2xl bg-[var(--bg-sidebar)] p-3 text-[var(--text-light)]">
+                  <span className="rounded-2xl bg-gradient-to-br from-[var(--bg-sidebar)] to-[var(--bg-card)] p-3 text-[var(--text-light)] shadow-lg">
                     <Icon size={22} />
                   </span>
                   <ArrowRight size={18} className="text-[var(--text-muted)] transition group-hover:text-[var(--accent)]" />
@@ -138,7 +138,7 @@ export const DashboardPage = () => {
           </div>
         </section>
 
-        <section className="rounded-3xl bg-[var(--bg-sidebar)] p-6 text-[var(--text-light)] shadow-2xl">
+        <section className="page-hero rounded-3xl p-6 text-[var(--text-light)] shadow-2xl">
           <div className="mb-5 flex items-center justify-between">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.16em] text-[var(--accent)]">Estado</p>
@@ -148,7 +148,7 @@ export const DashboardPage = () => {
               <RefreshCcw size={21} />
             </span>
           </div>
-          <p className="text-sm leading-6 text-white/58">
+          <p className="text-sm leading-6 text-white/60">
             Los servicios responden y el stock se mantiene sincronizado con la base de datos.
           </p>
           <div className="mt-5 rounded-2xl border border-white/10 bg-white/5 p-4">

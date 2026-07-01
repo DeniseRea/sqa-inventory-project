@@ -20,7 +20,7 @@ const navItems = [
 
 const Brand = () => (
   <div className="flex items-center gap-3">
-    <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/10">
+    <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/10 shadow-inner">
       <img src="/favicon.png" alt="Don Gato" className="h-8 w-8 object-contain" />
     </div>
     <div>
@@ -45,8 +45,8 @@ const NavLinks = ({ locationPath, mobile = false, onNavigate }) => (
           onClick={onNavigate}
           className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold transition ${
             isActive
-              ? "bg-[var(--accent)] text-white shadow-lg shadow-black/20"
-              : "text-[var(--text-light)]/60 hover:bg-white/10 hover:text-[var(--text-light)]"
+              ? "bg-gradient-to-r from-[var(--accent)] to-[#d06b48] text-white shadow-lg shadow-black/24"
+              : "text-[var(--text-light)]/62 hover:bg-white/10 hover:text-[var(--text-light)]"
           }`}
         >
           <Icon size={19} />
@@ -71,11 +71,13 @@ export const AdminTemplate = ({ children }) => {
 
   return (
     <div className="app-shell flex bg-[var(--bg-main)]">
-      <aside className="fixed inset-y-0 left-0 z-50 hidden w-64 flex-col bg-[var(--bg-sidebar)] shadow-2xl lg:flex">
+      <aside className="premium-sidebar fixed inset-y-0 left-0 z-50 hidden w-64 flex-col shadow-2xl lg:flex">
         <div className="p-6">
           <Brand />
         </div>
-        <div className="mx-6 mb-4 rounded-2xl border border-white/10 bg-white/5 p-4">
+        <div className="mx-6 mb-4 overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-xl">
+          <div className="h-20 bg-[url('/dashboard-hero.png')] bg-cover bg-center opacity-75" />
+          <div className="p-4">
           <div className="mb-2 flex items-center gap-2 text-[var(--text-light)]">
             <Coffee size={17} />
             <span className="text-xs font-black uppercase tracking-[0.16em]">Operacion</span>
@@ -83,6 +85,7 @@ export const AdminTemplate = ({ children }) => {
           <p className="text-xs leading-relaxed text-[var(--text-light)]/48">
             Control diario de productos, categorias y stock.
           </p>
+          </div>
         </div>
         <NavLinks locationPath={location.pathname} onNavigate={() => setMobileMenuOpen(false)} />
         <div className="p-6">
@@ -97,7 +100,7 @@ export const AdminTemplate = ({ children }) => {
         </div>
       </aside>
 
-      <div className="min-w-0 flex-1 lg:pl-64">
+      <div className="app-main min-w-0 flex-1 lg:pl-64">
         <header className="sticky top-0 z-40 border-b border-[var(--border-soft)] bg-[var(--bg-main)]/90 px-4 py-3 backdrop-blur-xl lg:hidden">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">

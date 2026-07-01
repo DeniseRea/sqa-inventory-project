@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Edit3, FolderKanban, Plus, Search, Trash2 } from "lucide-react";
 import { AdminTemplate } from "../components/templates/AdminTemplate";
+import { PageHeader } from "../components/ui/PageHeader";
 import { categoryService } from "../services/categoryService";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { Feedback, FieldError } from "../components/ui/Feedback";
@@ -95,22 +96,19 @@ export const CategoriesPage = () => {
 
   return (
     <AdminTemplate>
-      <header className="mb-7 grid gap-5 lg:grid-cols-[1fr_auto] lg:items-end">
-        <div>
-          <div className="mb-2 flex items-center gap-2 text-xs font-black uppercase tracking-[0.18em] text-[var(--accent)]">
-            <span className="h-1 w-8 rounded-full bg-[var(--accent)]" />
-            Organizacion
-          </div>
-          <h1 className="text-3xl font-black tracking-normal text-[var(--text-dark)]">Categorias</h1>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--text-muted)]">
-            Agrupa productos para encontrarlos rapido y mantener limpio el catalogo.
-          </p>
-        </div>
-        <button type="button" onClick={handleOpenCreate} className="btn-primary px-5 py-3 text-sm">
-          <Plus size={18} />
-          Nueva categoria
-        </button>
-      </header>
+      <PageHeader
+        eyebrow="Organizacion"
+        image="/categories-hero.png"
+        title="Categorias"
+        description="Agrupa productos para encontrarlos rapido y mantener limpio el catalogo."
+        stat={{ label: "Total", value: categories.length }}
+        action={
+          <button type="button" onClick={handleOpenCreate} className="btn-primary px-5 py-3 text-sm">
+            <Plus size={18} />
+            Nueva categoria
+          </button>
+        }
+      />
 
       {feedback && (
         <div className="mb-5">
@@ -137,9 +135,9 @@ export const CategoriesPage = () => {
         </div>
       ) : (
         <>
-          <div className="hidden overflow-hidden rounded-3xl border border-[var(--border-soft)] bg-white/90 shadow-xl md:block">
+          <div className="data-shell hidden overflow-hidden rounded-3xl md:block">
             <table className="w-full text-left">
-              <thead className="bg-[var(--bg-sidebar)] text-[var(--text-light)]">
+              <thead className="table-head text-[var(--text-light)]">
                 <tr>
                   <th className="px-6 py-4 text-xs font-black uppercase tracking-[0.16em] text-white/48">ID</th>
                   <th className="px-6 py-4 text-xs font-black uppercase tracking-[0.16em]">Nombre</th>
