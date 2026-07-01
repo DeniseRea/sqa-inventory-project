@@ -7,6 +7,8 @@ import {
   LogOut,
   Menu,
   Package,
+  ShieldCheck,
+  Sparkles,
   X,
 } from "lucide-react";
 import { useState } from "react";
@@ -69,6 +71,7 @@ export const AdminTemplate = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const username = localStorage.getItem("username") || "Administrador";
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -152,7 +155,39 @@ export const AdminTemplate = ({ children }) => {
                   <X size={21} />
                 </button>
               </div>
-              <NavLinks locationPath={location.pathname} mobile onNavigate={() => setMobileMenuOpen(false)} />
+              <div className="grid gap-4">
+                <div className="rounded-3xl border border-white/10 bg-white/10 p-4 text-[var(--text-light)]">
+                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[var(--accent-soft)]">
+                    Cuenta activa
+                  </p>
+                  <p className="mt-2 text-2xl font-black">{username}</p>
+                  <p className="mt-1 text-sm leading-6 text-white/50">
+                    Sesion iniciada para administrar el inventario Don Gato.
+                  </p>
+                </div>
+
+                <div className="grid gap-3">
+                  <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-4">
+                    <span className="rounded-xl bg-emerald-500/15 p-2 text-emerald-300">
+                      <ShieldCheck size={20} />
+                    </span>
+                    <div>
+                      <p className="text-sm font-black text-[var(--text-light)]">Sistema en linea</p>
+                      <p className="text-xs text-white/50">Stock y catalogo disponibles.</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-4">
+                    <span className="rounded-xl bg-[var(--accent)]/20 p-2 text-[var(--accent-soft)]">
+                      <Sparkles size={20} />
+                    </span>
+                    <div>
+                      <p className="text-sm font-black text-[var(--text-light)]">Inventario Gourmet</p>
+                      <p className="text-xs text-white/50">Panel optimizado para uso movil.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
               <button
                 type="button"
                 onClick={handleLogout}
